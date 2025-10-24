@@ -11,31 +11,20 @@ import {
   PencilLine,
 } from "lucide-react";
 
-const calculateAge = (birthDate) => {
-  const today = new Date();
-  const dob = new Date(birthDate);
-  let age = today.getFullYear() - dob.getFullYear();
-  const m = today.getMonth() - dob.getMonth();
-  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
-  return age;
-};
-
 export const Info = () => {
-  const { user } = useAuth();
+  const { user, account } = useAuth();
   const [showUpdateProfile, setShowUpdateProfile] = useState(false);
 
-  const age = calculateAge(user.birthDate);
-
   const infoItems = [
-    { icon: Phone, label: user.phone },
-    { icon: Mail, label: user.email },
-    { icon: MapPin, label: user.address },
+    { icon: Phone, label: user?.phoneNumber },
+    { icon: Mail, label: account?.email },
+    { icon: MapPin, label: user?.address },
     {
       icon: CalendarDays,
-      label: new Date(user.birthDate).toLocaleDateString("vi-VN"),
+      label: new Date(user?.dayOfBirth).toLocaleDateString("vi-VN"),
     },
-    { icon: Cake, label: `${age} tuổi` },
-    { icon: UserIcon, label: user.gender },
+    { icon: Cake, label: `${user?.age} tuổi` },
+    { icon: UserIcon, label: user?.gender === "FEMALE" ? "Nữ": user?.gender === "MALE" ? "Nam" : "Khác"},
   ];
 
   return (

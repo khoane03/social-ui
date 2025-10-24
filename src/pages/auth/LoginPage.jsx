@@ -1,15 +1,17 @@
 import { Eye, EyeOff, User, KeyRound } from "lucide-react";
 import { useState, useCallback, useRef, useEffect } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAlerts } from "../../context/AlertContext";
 import authService from "../../service/authService";
 import { useAuth } from "../../context/AuthContext";
+import { IntroLoading } from "../../components/common/IntroLoading";
 
 export const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const formRef = useRef(null);
   const otpRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(false);
   const { addAlert } = useAlerts();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -18,31 +20,42 @@ export const LoginPage = () => {
   const [resendTime, setResendTime] = useState(60);
   const [canResend, setCanResend] = useState(true);
   const { login, getCurrentUser } = useAuth();
+  const navigate = useNavigate();
 
   const togglePasswordVisibility = useCallback(() => {
     setShowPassword((prev) => !prev);
   }, []);
 
+
   const handleLogin = async () => {
+    if (!username || !password) {
+      addAlert({
+        type: "warning",
+        message: "Vui lòng nhập đầy đủ tài khoản và mật khẩu!",
+      });
+      return;
+    }
+
     try {
+      setIsLoading(true); 
       const res = await authService.login(username, password);
+
       if (res.data?.requireOtp) {
         setRequireOtp(true);
         setCanResend(false);
         setResendTime(60);
         addAlert({
           type: "info",
-          message: "Vui lòng nhập mã OTP đã được gửi đến bạn"
+          message: "Vui lòng nhập mã OTP đã được gửi đến bạn",
         });
       } else {
-
         await login(res.data.accessToken, res.data.refreshToken);
         await getCurrentUser();
+        addAlert({ type: "success", message: "Đăng nhập thành công!" });
 
-        addAlert({
-          type: "success",
-          message: "Đăng nhập thành công!"
-        });
+        setTimeout(() => {
+          navigate("/");
+        }, 1500);
       }
     } catch (error) {
       addAlert({
@@ -52,6 +65,8 @@ export const LoginPage = () => {
           error?.message ||
           "Lỗi hệ thống, vui lòng thử lại!",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -59,20 +74,21 @@ export const LoginPage = () => {
     if (!otp || otp.length < 6) {
       addAlert({
         type: "warning",
-        message: "Vui lòng nhập mã OTP đầy đủ (6 số)"
+        message: "Vui lòng nhập mã OTP đầy đủ (6 số)",
       });
       return;
     }
 
     try {
-      const res = await authService.loginWithOTP(username, otp)
+      setIsLoading(true);
+      const res = await authService.loginWithOTP(username, otp);
       await login(res.data.accessToken, res.data.refreshToken);
       await getCurrentUser();
-      addAlert({
-        type: "success",
-        message: "Xác thực thành công!"
-      });
-      // Xử lý sau khi verify OTP thành công
+      addAlert({ type: "success", message: "Xác thực thành công!" });
+
+      setTimeout(() => {
+        navigate("/");
+      }, 1500);
     } catch (error) {
       addAlert({
         type: "error",
@@ -81,8 +97,11 @@ export const LoginPage = () => {
           error?.message ||
           "Mã OTP không hợp lệ!",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
+
   const handleReSendOtp = async () => {
     try {
       await authService.resendOTP(username);
@@ -130,7 +149,7 @@ export const LoginPage = () => {
       formRef.current.focus();
     }
   }, [requireOtp]);
-
+  if (isLoading) return <IntroLoading />;
   return (
     <div className="flex flex-col md:flex-row gap-4 md:rounded-4xl w-full h-full overflow-hidden select-none">
       <motion.div

@@ -34,14 +34,17 @@ export const ModalAddPost = ({ onClose }) => {
         <div className="flex gap-3 mt-4">
           <img
             loading="lazy"
-            src={user.avatar || "default.png"}
+            src={user?.avatarUrl || "default.png"}
             className="w-10 h-10 rounded-full object-cover"
             alt="avatar"
           />
           <div className="flex-1">
             <div className="flex items-center gap-1 text-sm font-medium text-white">
-              {user.name}
-              <BadgeCheck className="ml-1 text-green-500 w-3 h-3 md:w-4 md:h-4" />
+              {user?.fullName}
+              {user?.isVerified && (
+                <BadgeCheck className="ml-1 text-green-500 w-3 h-3 md:w-4 md:h-4" />
+
+              )}
               <span className="text-zinc-500">
                 <ChevronRight />
               </span>
@@ -58,26 +61,26 @@ export const ModalAddPost = ({ onClose }) => {
 
             {/* Image Preview */}
             {images.length > 0 && (
-                <div className="overflow-x-scroll flex scrollbar-hide scroll-smooth gap-x-2 ">
-                  {images.map((img, index) => (
-                    <div
-                      key={index}
-                      className="relative min-w-fit rounded-2xl shrink-0 snap-center"
+              <div className="overflow-x-scroll flex scrollbar-hide scroll-smooth gap-x-2 ">
+                {images.map((img, index) => (
+                  <div
+                    key={index}
+                    className="relative min-w-fit rounded-2xl shrink-0 snap-center"
+                  >
+                    <img
+                      src={img}
+                      alt="preview"
+                      className="w-48 h-36 object-cover rounded-2xl"
+                    />
+                    <button
+                      onClick={() => handleRemoveImage(index)}
+                      className="absolute top-2 right-2 bg-black/60 rounded-full p-1"
                     >
-                      <img
-                        src={img}
-                        alt="preview"
-                        className="w-48 h-36 object-cover rounded-2xl"
-                      />
-                      <button
-                        onClick={() => handleRemoveImage(index)}
-                        className="absolute top-2 right-2 bg-black/60 rounded-full p-1"
-                      >
-                        <CircleX className="text-red-500 w-5 h-5" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                      <CircleX className="text-red-500 w-5 h-5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </div>
@@ -147,10 +150,9 @@ const SubmitPost = ({ func, desc }) => (
       disabled={!desc.trim()}
       onClick={func}
       className={`px-4 py-1.5 rounded-2xl text-sm font-medium transition
-        ${
-          desc.trim()
-            ? "bg-white text-black hover:bg-zinc-300"
-            : "bg-zinc-700 text-zinc-500 cursor-not-allowed"
+        ${desc.trim()
+          ? "bg-white text-black hover:bg-zinc-300"
+          : "bg-zinc-700 text-zinc-500 cursor-not-allowed"
         }`}
     >
       Đăng

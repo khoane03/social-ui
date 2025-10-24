@@ -2,7 +2,7 @@ import { BadgeCheck, LogOut, UserPlus } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 export const Suggestion = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const suggestions = [
     { username: "Lan cục cức", avatar: '"https://i.imgur.com/7VbD1Qm.png"' },
     { username: "Tester", avatar: '"https://i.imgur.com/7VbD1Qm.png"' },
@@ -18,14 +18,17 @@ export const Suggestion = () => {
       <div className="flex items-center justify-between mb-6 dark:text-white text-white-theme">
         <div className="flex items-center gap-2">
           <img
-            src={user.avatar}
+            src={user?.avatarUrl}
             className="w-10 h-10 rounded-full ring-2 ring-pink-500"
           />
-          <p className="text-xl font-semibold ">{user.name}</p>
-           <BadgeCheck className="ml-1 text-green-500 w-3 h-3 md:w-4 md:h-4" />
+          <p className="text-xl font-semibold ">{user?.fullName}</p>
+          {user?.isVerified && (
+            <BadgeCheck className="ml-1 text-green-500 w-3 h-3 md:w-4 md:h-4" />
+
+          )}
         </div>
-        <button className="hover:scale-105 hover:text-red-400 text-sm">
-          <LogOut/>
+        <button onClick={logout} className="hover:scale-105 hover:text-red-400 text-sm">
+          <LogOut />
         </button>
       </div>
       <div className="mb-4 flex justify-between items-center dark:text-white">

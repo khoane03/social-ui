@@ -41,7 +41,7 @@ axiosInstance.interceptors.response.use(
         }
 
         // ⚠️ Gọi trực tiếp axios (ko dùng axiosInstance) để tránh interceptor lặp
-        const res = await axios.post("http://localhost:8080/api/v1/auth/refresh", {
+        const res = await axios.post("http://localhost:8080/auth/refresh", {
           token: refreshToken,
         });
         console.log("token ",res.data.data.accessToken);

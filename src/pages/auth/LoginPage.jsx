@@ -1,4 +1,4 @@
-import { Eye, EyeOff, User, KeyRound } from "lucide-react";
+import { Eye, EyeOff, User, KeyRound, Loader2 } from "lucide-react";
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,6 +12,7 @@ export const LoginPage = () => {
   const formRef = useRef(null);
   const otpRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoginSuccess, setIsLoginSuccess] = useState(false);
   const { addAlert } = useAlerts();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -21,11 +22,17 @@ export const LoginPage = () => {
   const [canResend, setCanResend] = useState(true);
   const { login, getCurrentUser } = useAuth();
   const navigate = useNavigate();
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const togglePasswordVisibility = useCallback(() => {
     setShowPassword((prev) => !prev);
   }, []);
-
 
   const handleLogin = async () => {
     if (!username || !password) {
@@ -37,7 +44,7 @@ export const LoginPage = () => {
     }
 
     try {
-      setIsLoading(true); 
+      setIsLoading(true);
       const res = await authService.login(username, password);
 
       if (res.data?.requireOtp) {
@@ -52,6 +59,7 @@ export const LoginPage = () => {
         await login(res.data.accessToken, res.data.refreshToken);
         await getCurrentUser();
         addAlert({ type: "success", message: "Đăng nhập thành công!" });
+        setIsLoginSuccess(true);
 
         setTimeout(() => {
           navigate("/");
@@ -85,10 +93,8 @@ export const LoginPage = () => {
       await login(res.data.accessToken, res.data.refreshToken);
       await getCurrentUser();
       addAlert({ type: "success", message: "Xác thực thành công!" });
-
-      setTimeout(() => {
-        navigate("/");
-      }, 1500);
+      setIsLoginSuccess(true);
+      setTimeout(() => navigate("/"), 1500);
     } catch (error) {
       addAlert({
         type: "error",
@@ -120,14 +126,13 @@ export const LoginPage = () => {
           "Mã OTP không hợp lệ!",
       });
     }
-  }
+  };
 
   const handleBackToLogin = () => {
     setRequireOtp(false);
     setOtp('');
     setPassword('');
   };
-
 
   useEffect(() => {
     let timer;
@@ -141,21 +146,23 @@ export const LoginPage = () => {
     return () => clearInterval(timer);
   }, [canResend, resendTime]);
 
-
   useEffect(() => {
-    if (requireOtp && otpRef.current) {
-      otpRef.current.focus();
-    } else if (!requireOtp && formRef.current) {
-      formRef.current.focus();
-    }
+    if (requireOtp && otpRef.current) otpRef.current.focus();
+    else if (!requireOtp && formRef.current) formRef.current.focus();
   }, [requireOtp]);
-  if (isLoading) return <IntroLoading />;
+
+  if (isLoginSuccess) return <IntroLoading />;
+
   return (
     <div className="flex flex-col md:flex-row gap-4 md:rounded-4xl w-full h-full overflow-hidden select-none">
       <motion.div
-        initial={{ opacity: 0, x: -100 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
+        initial={
+          isMobile
+            ? { opacity: 0, x: 0, y: "-100%" }
+            : { opacity: 0, x: "-100%", y: 0 }
+        }
+        animate={{ opacity: 1, x: 0, y: 0 }}
+        transition={{ duration: 1, ease: "easeOut" }}
         className="flex-5 md:flex-7 flex flex-col items-center justify-center bg-[#7F9FEF] md:rounded-l-4xl md:rounded-r-[35%] rounded-b-[25%]"
       >
         <motion.h1
@@ -166,6 +173,7 @@ export const LoginPage = () => {
         >
           Chào bạn, trở lại!
         </motion.h1>
+
         <motion.span
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -174,6 +182,7 @@ export const LoginPage = () => {
         >
           Bạn chưa có tài khoản?
         </motion.span>
+
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -215,6 +224,7 @@ export const LoginPage = () => {
                 Đăng nhập
               </motion.h2>
 
+              {/* Username */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -232,6 +242,7 @@ export const LoginPage = () => {
                 <User className="text-gray-500" />
               </motion.div>
 
+              {/* Password */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -252,40 +263,12 @@ export const LoginPage = () => {
                   type="button"
                   onClick={togglePasswordVisibility}
                   className="text-gray-500 hover:text-gray-700"
-                  aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                 >
                   {showPassword ? <Eye /> : <EyeOff />}
                 </button>
               </motion.div>
 
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.5 }}
-                className="flex items-center justify-between w-full max-w-sm px-2"
-              >
-                <label
-                  htmlFor="remember-me"
-                  className="inline-flex items-center cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    id="remember-me"
-                    className="h-4 w-4 rounded"
-                  />
-                  <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                    Nhớ mật khẩu
-                  </span>
-                </label>
-
-                <Link
-                  to="/forgot-password"
-                  className="text-sm text-blue-500 hover:underline"
-                >
-                  Quên mật khẩu?
-                </Link>
-              </motion.div>
-
+              {/* Button */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -293,12 +276,17 @@ export const LoginPage = () => {
                 className="w-full max-w-sm"
               >
                 <motion.button
-                  whileHover={{ scale: 1.02, backgroundColor: "#60a5fa" }}
+                  whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleLogin}
-                  className="w-full bg-[#7F9FEF] text-white font-semibold py-2.5 rounded-2xl mt-2"
+                  disabled={isLoading}
+                  className="w-full bg-[#7F9FEF] text-white font-semibold py-2.5 rounded-2xl mt-2 flex justify-center items-center gap-2"
                 >
-                  Đăng nhập
+                  {isLoading ? (
+                    <Loader2 className="animate-spin" size={20} />
+                  ) : (
+                    "Đăng nhập"
+                  )}
                 </motion.button>
               </motion.div>
             </motion.div>
@@ -311,23 +299,9 @@ export const LoginPage = () => {
               transition={{ duration: 0.3 }}
               className="flex flex-col gap-4 items-center w-full"
             >
-              <motion.h2
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="font-semibold text-2xl text-center py-4"
-              >
+              <motion.h2 className="font-semibold text-2xl text-center py-4">
                 Xác thực OTP
               </motion.h2>
-
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                className="text-sm text-gray-600 text-center max-w-sm px-4"
-              >
-                Vui lòng nhập mã OTP 6 số đã được gửi đến bạn
-              </motion.p>
 
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -350,62 +324,37 @@ export const LoginPage = () => {
                 <KeyRound className="text-gray-500" />
               </motion.div>
 
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                className="w-full max-w-sm flex flex-col gap-3"
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleVerifyOtp}
+                disabled={isLoading}
+                className="w-full max-w-sm bg-[#7F9FEF] text-white font-semibold py-2.5 rounded-2xl flex justify-center items-center gap-2"
               >
-                <motion.button
-                  whileHover={{ scale: 1.02, backgroundColor: "#60a5fa" }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleVerifyOtp}
-                  className="w-full bg-[#7F9FEF] text-white font-semibold py-2.5 rounded-2xl"
-                >
-                  Xác nhận
-                </motion.button>
+                {isLoading ? <Loader2 className="animate-spin" size={20} /> : "Xác nhận"}
+              </motion.button>
 
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleBackToLogin}
-                  className="w-full bg-gray-200 text-gray-700 font-semibold py-2.5 rounded-2xl hover:bg-gray-300 transition-colors"
-                >
-                  Quay lại
-                </motion.button>
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-                className="flex flex-col items-center mt-4"
+              <button
+                onClick={handleBackToLogin}
+                className="w-full max-w-sm bg-gray-200 text-gray-700 font-semibold py-2.5 rounded-2xl hover:bg-gray-300"
               >
-                <motion.button
-                  whileHover={canResend ? { scale: 1.05 } : {}}
-                  whileTap={canResend ? { scale: 0.95 } : {}}
-                  className={`text-sm font-medium tracking-wide ${canResend
-                    ? "text-blue-500 hover:text-blue-600 hover:underline"
-                    : "text-gray-400 cursor-not-allowed"
-                    }`}
-                  disabled={!canResend}
-                  onClick={handleReSendOtp}
-                >
-                  {canResend
-                    ? "Gửi lại mã OTP"
-                    : `Gửi lại mã OTP sau ${resendTime}s`}
-                </motion.button>
+                Quay lại
+              </button>
 
-                {!canResend && (
-                  <motion.div
-                    initial={{ width: "100%" }}
-                    animate={{ width: `${(resendTime / 60) * 100}%` }}
-                    transition={{ duration: 1, ease: "linear" }}
-                    className="h-0.5 bg-blue-400 rounded-full mt-2"
-                    style={{ maxWidth: "120px" }}
-                  />
-                )}
-              </motion.div>
-
+              <motion.button
+                whileHover={canResend ? { scale: 1.05 } : {}}
+                whileTap={canResend ? { scale: 0.95 } : {}}
+                className={`text-sm font-medium tracking-wide ${canResend
+                  ? "text-blue-500 hover:text-blue-600 hover:underline"
+                  : "text-gray-400 cursor-not-allowed"
+                  }`}
+                disabled={!canResend}
+                onClick={handleReSendOtp}
+              >
+                {canResend
+                  ? "Gửi lại mã OTP"
+                  : `Gửi lại mã OTP sau ${resendTime}s`}
+              </motion.button>
             </motion.div>
           )}
         </AnimatePresence>

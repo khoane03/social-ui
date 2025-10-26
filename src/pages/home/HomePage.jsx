@@ -1,50 +1,69 @@
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { NewPost } from "../../components/post/NewPost";
 import { Post } from "../../components/post/Post";
 import { Suggestion } from "../../components/suggestion/Suggestion";
-const posts = [
-  {
-  user: {
-    avatar:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTfjNpt7mV0bJ6BxvMN4D09lhUaiUcW8i5UwA&s",
-    username: "Social Admin",
-    time: "3h ago",
-  },
-  image: [
-    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTfjNpt7mV0bJ6BxvMN4D09lhUaiUcW8i5UwA&s",
-    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQbNNfsPHUOpXCrvgz2zvBS3_GuG1efiESamw&https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQbNNfsPHUOpXCrvgz2zvBS3_GuG1efiESamw&s",
-  ],
+import { useAuth } from "../../context/AuthContext";
+import { useAlerts } from "../../context/AlertContext";
+import postService from "../../service/postService";
 
-  caption:
-    "Đi làm rồi thì hay có time ✨",
-},
-{user: {
-    avatar:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTfjNpt7mV0bJ6BxvMN4D09lhUaiUcW8i5UwA&s",
-    username: "Admin",
-    time: "3h ago",
-  },
-  image: [
-    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTfjNpt7mV0bJ6BxvMN4D09lhUaiUcW8i5UwA&s",
-    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQbNNfsPHUOpXCrvgz2zvBS3_GuG1efiESamw&https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQbNNfsPHUOpXCrvgz2zvBS3_GuG1efiESamw&s",
-  ],
-
-  caption:
-    "Đi làm rồi thì hay có thói quen time-laspe quay coi mình làm việc sao mà thấy nói là chủ yếu ☺️ Nhưng mà…bên MISA HCM đang tuyển job Nhân viên Kinh doanh - không yêu cầu kinh nghiệm - mom nào newbie/fresher mà giao tiếp tốt thì về với đội của tôi ✨",
-},
-]
 export const HomePage = () => {
+  const [posts, setPosts] = useState([]);
+  const { user } = useAuth();
+  const { addAlert } = useAlerts();
+  
+  useEffect(() => {
+    document.title = 'Trang cá nhân';
+    if (user && user.id) {
+      (async () => {
+        try {
+          const response = await postService.getPostusers(user.id);
+          console.log(response);
+          setPosts(response.data);
+        } catch (error) {
+          console.error("Lỗi tải bài viết:", error);
+          addAlert(
+            {
+              type: "error",
+              message: error.response?.data?.message || "Đã có lỗi xảy ra khi tải bài viết.",
+            }
+          );
+        }
+      })();
+    }
+  }, [user]);
 
   return (
-    <div className="flex">
+    <div className="flex scroll-smooth">
       <div className="flex-1 px-6 py-4 max-w-2xl mx-auto">
         <div className="border min-h-screen border-b-wt dark:border-zinc-700 rounded-t-4xl">
           {/* new post */}
           <NewPost />
           {/* list post */}
-          {posts.map((post, index) => (
-            
-            <Post key={index} post={post}/>
-          ))}
+          <AnimatePresence mode="popLayout">
+            {posts.length > 0 ? (
+              posts.map((post, index) => (
+                <motion.div
+                  key={post.id || index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
+                  layout
+                >
+                  <Post post={post} />
+                </motion.div>
+              ))
+            ) : (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex items-center justify-center py-12 text-gray-500 dark:text-gray-400"
+              >
+                <p>Chưa có bài viết nào</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 

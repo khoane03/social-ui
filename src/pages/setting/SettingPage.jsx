@@ -7,11 +7,13 @@ import {
 import { useMemo, useState } from "react";
 import { ThemeToggleButton } from "../../components/button/ThemeToggleButton";
 import { UpdateProfile } from "../../components/profile/UpdateProfile";
-import { SettingModal } from "./SettingModal"; 
+import { SettingModal } from "./SettingModal";
+import { useAuth } from "../../context/AuthContext";
 
 export const SettingPage = () => {
   const [showModal, setShowModal] = useState(false);
-  const [showSecurityModal, setShowSecurityModal] = useState(false); 
+  const [showSecurityModal, setShowSecurityModal] = useState(false);
+  const { logout } = useAuth();
 
   const settings = useMemo(() => [
     {
@@ -37,7 +39,7 @@ export const SettingPage = () => {
       title: "Đăng xuất",
       description: "Đăng xuất tài khoản của bạn",
       onClick: () => {
-        console.log("Đăng xuất...");
+        logout();
       },
     },
   ], []);

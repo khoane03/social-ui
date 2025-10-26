@@ -1,7 +1,6 @@
 import { CircleCheckBig, Info, ShieldCheck, UserRoundPen } from "lucide-react";
 
 const steps = [
-  { icon: ShieldCheck, label: "Xác thực" },
   { icon: UserRoundPen, label: "Tài khoản" },
   { icon: Info, label: "Thông tin" },
 ];

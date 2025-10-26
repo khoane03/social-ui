@@ -19,6 +19,7 @@ import { AccountManagerPage } from "../pages/dashboard/AccountManagerPage";
 import { PostManagerPage } from "../pages/dashboard/PostManagerPage";
 import { RoleManagerPage } from "../pages/dashboard/RoleManagerPage";
 import { NoPermission } from "../pages/error/NoPermisstion";
+import ModalUpdateProfile from "../components/auth/ModalUpdateProfile";
 
 const AppRoute = () => {
   return (
@@ -27,14 +28,16 @@ const AppRoute = () => {
         <Route element={<PrivateRoute />}>
           <Route path="/" element={<MainLayout />}>
             <Route index element={<HomePage />} />
-            <Route path="friends" element={<FriendPage />} />"
+            <Route path="friends" element={<FriendPage />} />
             <Route path="settings" element={<SettingPage />} />
             <Route path="profile" element={<ProfileLayout />}>
               <Route index element={<ProfilePage />} />
-              <Route path="friends" element={<FriendPage />} />
-              <Route path="images" element={<Image />} />
-              <Route path="info" element={<Info />} />
+              <Route path=":id" element={<ProfilePage />} />
+              <Route path=":id/friends" element={<FriendPage />} />
+              <Route path=":id/images" element={<Image />} />
+              <Route path=":id/info" element={<Info />} />
             </Route>
+            <Route path="required-update-profile" element={<ModalUpdateProfile />} />
           </Route>
           <Route path="/message" element={<MessageLayout />}>
             <Route index element={<MessagePage />} />

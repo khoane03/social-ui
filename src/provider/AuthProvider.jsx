@@ -24,24 +24,34 @@ const AuthProvider = ({ children }) => {
         accountService.getAccountLogin(),
         userService.getUserLogin(),
       ]);
+
       setAccount(accountRes?.data || null);
       setUser(userRes?.data || null);
     } catch (err) {
+      const errorCode = err?.response?.data?.code;
+      const errorMessage = err?.response?.data?.message;
+
+      if (errorCode === 400_002) {
+        // ✅ Chỉ redirect nếu chưa ở trang required-update-profile
+        if (window.location.pathname !== "/required-update-profile") {
+          window.location.replace("/required-update-profile");
+        }
+        return;
+      }
+
       addAlert?.({
         type: "error",
-        message:
-          err?.response?.data?.message || "Không thể tải dữ liệu người dùng!",
+        message: errorMessage || "Không thể tải dữ liệu người dùng!",
       });
     } finally {
       setLoading(false);
     }
   }, [addAlert]);
 
-  const login = useCallback(async (accessToken, refreshToken) => {
+  const login = async (accessToken, refreshToken) => {
     setAccessToken(accessToken);
     setRefreshToken(refreshToken);
-    await getCurrentUser();
-  }, [getCurrentUser]);
+  };
 
   const logout = useCallback(() => {
     removeAccessToken();
@@ -59,8 +69,12 @@ const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const token = getAccessToken();
-    if (token) getCurrentUser();
-    else setLoading(false);
+    // ✅ Không gọi getCurrentUser khi đang ở trang required-update-profile
+    if (token && window.location.pathname !== "/required-update-profile") {
+      getCurrentUser();
+    } else {
+      setLoading(false);
+    }
   }, [getCurrentUser]);
 
   return (

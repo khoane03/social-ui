@@ -8,7 +8,7 @@ export const Images = ({ imgs }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   if (!imgs || imgs.length === 0) {
-    return <div className="text-center text-zinc-400">No images available</div>;
+    return;
   }
 
   const handleNext = () => {

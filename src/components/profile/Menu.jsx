@@ -11,7 +11,7 @@ export const Menu = () => {
 
   return (
     <div className="h-full">
-      <ul className="flex items-center justify-around p-2 w-full border-b border-b-wt dark:border-zinc-700">
+      <ul className="flex items-center justify-around p-2 w-full">
         {menuItems.map(({ to, icon }) => (
           <li
             className="transition-transform duration-300 hover:scale-105"

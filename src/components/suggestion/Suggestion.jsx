@@ -16,7 +16,7 @@ export const Suggestion = () => {
   ];
   return (
     <>
-      <div className="flex items-center justify-between mb-6 dark:text-white text-white-theme">
+      <div className="flex items-center justify-between mb-6 dark:text-white text-white-theme select-none">
         <div className="flex items-center gap-2">
           <img
             src={user?.avatarUrl}
@@ -32,11 +32,11 @@ export const Suggestion = () => {
           <LogOut />
         </button>
       </div>
-      <div className="mb-4 flex justify-between items-center dark:text-white">
+      <div className="mb-4 flex justify-between items-center dark:text-white select-none">
         <p className="text-sm text-zinc-400">Đề xuất cho bạn</p>
         <button className="text-sm">Xem tất cả</button>
       </div>
-      <div className="flex flex-col gap-3 dark:text-white">
+      <div className="flex flex-col gap-3 dark:text-white select-none">
         {suggestions.map((s, i) => (
           <div key={i} className="flex justify-between items-center">
             <div className="flex items-center gap-2">

@@ -18,7 +18,7 @@ export const SettingModal = ({ onClose }) => {
 
   const passwordInputRef = useRef(null);
   const { addAlert } = useAlerts();
-  const { account } = useAuth();
+  const { account, getCurrentUser } = useAuth();
 
   useEffect(() => {
     if (account?.twoFactorAuth !== undefined) {
@@ -54,7 +54,7 @@ export const SettingModal = ({ onClose }) => {
       setIsLoading(true);
       await accountService.twoFA(account.id);
       setIs2FAEnabled(prev => !prev);
-
+      await getCurrentUser();
       addAlert({
         type: "success",
         message: `${is2FAEnabled ? "Tắt" : "Bật"} 2FA thành công.`

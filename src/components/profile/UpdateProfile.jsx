@@ -15,7 +15,7 @@ export const UpdateProfile = ({ onClose }) => {
     bio: "",
   });
 
-  const { user } = useAuth();
+  const { user, getCurrentUser } = useAuth();
   const { addAlert } = useAlerts();
 
   useEffect(() => {
@@ -41,6 +41,7 @@ export const UpdateProfile = ({ onClose }) => {
     try {
       await userService.updateUserProfile(user.id, formData);
       addAlert({ type: "success", message: "Cập nhật thông tin cá nhân thành công!" });
+      await getCurrentUser();
       onClose();
     } catch (error) {
       addAlert({

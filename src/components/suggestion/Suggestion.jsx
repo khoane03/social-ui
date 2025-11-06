@@ -1,5 +1,6 @@
 import { BadgeCheck, LogOut, UserPlus } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { Link } from "react-router";
 
 export const Suggestion = () => {
   const { user, logout } = useAuth();
@@ -21,7 +22,7 @@ export const Suggestion = () => {
             src={user?.avatarUrl}
             className="w-10 h-10 rounded-full ring-2 ring-pink-500"
           />
-          <p className="text-xl font-semibold ">{user?.fullName}</p>
+          <Link to={`/profile/${user?.id}`} className="text-xl font-semibold ">{user?.fullName}</Link>
           {user?.isVerified && (
             <BadgeCheck className="ml-1 text-green-500 w-3 h-3 md:w-4 md:h-4" />
 

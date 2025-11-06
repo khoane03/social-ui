@@ -13,6 +13,10 @@ const userService = {
     updateUserProfile: async (id, profileData) => {
         const response = await axiosInstance.put(`/user/${id}`, profileData);
         return response;
+    },
+    uploadImage: async (params) => {
+        const response = await axiosInstance.put('/user/image', params);
+        return response;
     }
 };
 export default userService;

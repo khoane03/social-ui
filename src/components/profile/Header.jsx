@@ -1,11 +1,17 @@
 import { BadgeCheck, MapPin, SwitchCamera, UserRoundCog } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { UpdateProfile } from "./UpdateProfile";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router";
 
 export const Header = () => {
   const { user } = useAuth();
+  const { id } = useParams();
   const [updateProfile, setUpdateProfile] = useState(false);
+
+  useEffect(() => {
+
+  }, [id]);
 
   return (
     <>

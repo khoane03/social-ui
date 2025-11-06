@@ -10,7 +10,7 @@ export const ShowPost = ({ onClose, post }) => {
         <div className="flex items-center justify-between mb-4">
           <CircleX onClick={onClose} />
           <span className="dark:text-white text-white-theme font-bold text-lg">
-            {post.user.username}
+            {post.author.fullName}
           </span>
           <div></div>
         </div>

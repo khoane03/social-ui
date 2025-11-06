@@ -11,6 +11,32 @@ export const Post = ({ post }) => {
     return <div className="text-center text-zinc-400 pt-4">Không có bài viết nào.</div>;
   }
 
+  function formatTime(date) {
+    if (!date) return "";
+
+    const updatedDate = new Date(date);
+    const now = new Date();
+    const diffMs = now - updatedDate;
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMins / 60);
+
+    if (diffMins < 60) {
+
+      return `${diffMins} phút trước`;
+    } else if (diffHours < 24) {
+      return `${diffHours} giờ trước`;
+    } else if (diffHours < 48) {
+      return "Hôm qua";
+    } else {
+      return updatedDate.toLocaleDateString("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+    }
+  }
+
+
   return (
     <>
       {isShowPost && <ShowPost post={post} onClose={() => setIsShowPost(false)} />}
@@ -33,7 +59,7 @@ export const Post = ({ post }) => {
               </span>
               <span className="text-zinc-400 text-xs md:text-sm flex items-center">
                 <Dot className="w-4 h-4" />
-                {new Date(post?.createAt).toLocaleString()}
+                {formatTime(post?.updateAt)}
               </span>
             </div>
             <p

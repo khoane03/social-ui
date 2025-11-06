@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from "react-router";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router";
 import NotFound from "../pages/error/NotFound";
 import PrivateRoute from "./PrivateRoute";
 import { HomePage } from "../pages/home/HomePage";
@@ -32,6 +32,9 @@ const AppRoute = () => {
             <Route path="settings" element={<SettingPage />} />
             <Route path="profile" element={<ProfileLayout />}>
               <Route index element={<ProfilePage />} />
+              <Route path="friends" element={<FriendPage />} />
+              <Route path="images" element={<Image />} />
+              <Route path="info" element={<Info />} />
               <Route path=":id" element={<ProfilePage />} />
               <Route path=":id/friends" element={<FriendPage />} />
               <Route path=":id/images" element={<Image />} />

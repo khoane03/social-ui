@@ -4,8 +4,9 @@ import { getAccessToken } from "../service/storeService";
 
 const PrivateRoute = ({ redirectTo = "/auth", onlyAdmin = false }) => {
   const token = getAccessToken();
+  const {account} = useAuth();
   
-  if (!token || (onlyAdmin && user?.role !== "ROLE_ADMIN")) {
+  if (!token || (onlyAdmin && account?.roles?.includes("ROLE_ADMIN"))) {
     return <Navigate to={redirectTo} replace />;
   }
   

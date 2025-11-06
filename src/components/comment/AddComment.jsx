@@ -14,14 +14,14 @@ export const AddComment = (onClose) => {
       <div className="flex items-center justify-between mt-4 ">
         <div className="flex items-center w-full">
           <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTfjNpt7mV0bJ6BxvMN4D09lhUaiUcW8i5UwA&s"
+            src={user?.avatarUrl || "default.png"}
             alt="User Avatar"
             className="w-10 h-10 rounded-full border "
           />
           <div className="flex flex-col mx-4">
             <span className="flex items-center font-semibold text-lg">
-              {user.name}
-              <BadgeCheck className="ml-2 text-green-500" />
+              {user?.fullName}
+              {user?.isVerified && <BadgeCheck className="ml-2 text-green-500" />}
             </span>
             <input
               type="text"

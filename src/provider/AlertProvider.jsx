@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, createContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BadgeInfo, Bug, CircleCheck, X } from "lucide-react";
+import { BadgeInfo, Bell, Bug, CircleCheck, X } from "lucide-react";
 
 const AlertContext = createContext(null);
 
@@ -75,7 +75,7 @@ function AlertCard({ alert, onClose }) {
         success: <CircleCheck className="text-green-500" />,
         error: <Bug className="text-red-500" />,
         warning: <BadgeInfo className="text-yellow-500" />,
-        info: <BadgeInfo className="text-blue-500" />,
+        info: <Bell className="text-blue-500" />,
     };
 
     const typeLabels = {

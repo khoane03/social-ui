@@ -17,6 +17,9 @@ const authService = {
         const response = await axiosInstance.post('/auth/register', { email, password });
         return response;
     },
-    
+    refreshToken: async (refreshToken) => {
+        const response = await axiosInstance.post('/auth/refresh', { refreshToken });
+        return response;
+    },
 };
 export default authService;

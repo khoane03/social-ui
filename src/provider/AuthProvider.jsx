@@ -62,9 +62,6 @@ const AuthProvider = ({ children }) => {
       type: "success",
       message: "Đăng xuất thành công",
     });
-    setTimeout(() => {
-      window.location.href = "/auth";
-    }, 1000);
   }, [addAlert]);
 
   useEffect(() => {

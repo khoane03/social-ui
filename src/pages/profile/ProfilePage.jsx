@@ -17,7 +17,6 @@ export const ProfilePage = () => {
       (async () => {
         try {
           const response = await postService.getPostusers(user.id);
-          console.log(response);
           setPosts(response.data);
         } catch (error) {
           console.error("Lỗi tải bài viết:", error);

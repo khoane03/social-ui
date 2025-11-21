@@ -63,7 +63,7 @@ export const ModalAddPost = ({ onClose }) => {
       files.forEach((file) => {
         formData.append("files", file);
       });
-      const response = await postService.createPost(formData);
+      await postService.createPost(formData);
       addAlert({ type: "success", message: "Đăng bài viết thành công!" });
       images.forEach((url) => URL.revokeObjectURL(url));
 

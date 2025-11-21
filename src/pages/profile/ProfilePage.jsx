@@ -32,7 +32,7 @@ export const ProfilePage = () => {
   }, [user]);
 
   return (
-    <div className="border min-h-screen border-b-wt dark:border-zinc-700 rounded-t-4xl">
+    <div className="md:border min-h-screen border-b-wt dark:border-zinc-700 md:rounded-t-4xl">
       <NewPost />
       <AnimatePresence mode="popLayout">
         {posts.length > 0 ? (

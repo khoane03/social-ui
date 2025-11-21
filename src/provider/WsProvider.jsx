@@ -98,6 +98,7 @@ export const StompProvider = ({ children }) => {
                 console.error('❌ Chat STOMP error:', frame.headers?.message || frame.command);
 
                 const errorMsg = frame.headers?.message || '';
+                console.log('errorMsg:', errorMsg);
                 if (
                     errorMsg.includes('Authentication failed') ||
                     errorMsg.includes('401') ||

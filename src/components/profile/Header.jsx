@@ -192,7 +192,7 @@ export const Header = () => {
         style={{
           backgroundImage: user?.coverUrl ? `url(${user.coverUrl})` : "cover_default.jpg",
         }}
-        className={`relative select-none rounded-2xl bg-cover bg-center p-4 md:p-6 flex flex-col md:flex-row items-center gap-4 md:gap-6 dark:text-white text-bg-white-theme`}>
+        className={`relative select-none md:rounded-2xl bg-cover bg-center p-4 md:p-6 flex flex-col md:flex-row items-center gap-4 md:gap-6 dark:text-white text-bg-white-theme`}>
         <motion.button
           whileHover={{ scale: 1.1, rotate: 15 }}
           whileTap={{ scale: 0.95 }}
@@ -202,7 +202,7 @@ export const Header = () => {
         >
           <SwitchCamera className="w-5 h-5 md:w-6 md:h-6" />
         </motion.button>
-        <div className="absolute rounded-2xl inset-0 bg-black/60 z-0" />
+        <div className="absolute md:rounded-2xl inset-0 bg-black/60 z-0" />
         <div className="relative rounded-2xl z-10 flex flex-col md:flex-row items-center gap-4 w-full">
           <div className="relative">
             <img

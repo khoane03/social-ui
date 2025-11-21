@@ -5,7 +5,7 @@ import { Menu } from "../components/profile/Menu";
 
 export const ProfileLayout = () => {
   return (
-    <div className="m-4 md:mx-auto md:w-[80%] min-h-screen">
+    <div className="md:mt-4 md:mx-auto md:w-[80%] min-h-screen">
         <Header />
         <Menu />
         <Outlet/>

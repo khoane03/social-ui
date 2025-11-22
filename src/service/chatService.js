@@ -6,8 +6,11 @@ const chatService = {
         return response;
     },
     deleteMessage: async (data) => {
-        console.log('Deleting message with data:', data);
         const response = await axiosInstance.delete('/chat', {data});
+        return response;
+    },
+    sendMessage: async (messageData) => {
+        const response = await axiosInstance.post('/chat', messageData);
         return response;
     }
 };

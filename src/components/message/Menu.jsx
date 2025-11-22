@@ -1,13 +1,12 @@
-import { BadgeCheck, Users, Plus, Dot, Ellipsis } from "lucide-react";
+import { BadgeCheck, Users, Plus, Dot, Ellipsis, Trash2, Delete } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router";
 import { useWebsocket } from "../../context/WsContext";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useAlerts } from "../../context/AlertContext";
 import { formatTime } from "../../service/ultilsService";
 import { CreateConversationModal } from "./CreateConversationModal";
 import conversationService from "../../service/conversationService";
-import { a } from "motion/react-m";
 
 export const Menu = () => {
   const { chatConnected, subscribeChat } = useWebsocket();
@@ -16,7 +15,6 @@ export const Menu = () => {
   const [showCreateConversation, setShowCreateConversation] = useState(false);
   const { addAlert } = useAlerts();
   const [openMenuId, setOpenMenuId] = useState(null);
-  const menuRef = useRef(null);
   const navigate = useNavigate();
   const currentId = useParams().id;
 
@@ -39,14 +37,53 @@ export const Menu = () => {
 
     const conversationTopic = `/user/${user.id}/queue/conversations`;
 
-    const unsubscribe = subscribeChat(conversationTopic, (r) => {
-      let payload = r;
+    const unsubscribe = subscribeChat(conversationTopic, (data) => {
       try {
-        if (r?.body) payload = JSON.parse(r.body);
-        console.log("Received conversation update:", payload);
-        setMyConversations(payload?.conversations);
-      } catch (e) {
-        console.warn("Failed to parse conversation body:", e);
+        switch (data?.type) {
+          case "init_conversations":
+            setMyConversations(data?.conversations);
+            break;
+
+          case "new_conversation":
+            setMyConversations((prev) => [
+              data.conversation,
+              ...prev
+            ]);
+            break;
+
+          case "update_conversation":
+            setMyConversations((prev) => {
+              if (!data?.conversation) return prev;
+
+              const updated = data.conversation;
+
+              // Xóa bản cũ nếu tồn tại
+              const filtered = prev.filter(c => c.id !== updated.id);
+
+              // Đưa lên đầu danh sách
+              return [updated, ...filtered];
+            });
+            break;
+
+
+          case "delete_conversation":
+            setMyConversations((prev) =>
+              prev.filter((conv) => conv.id !== data.conversationId)
+            );
+            if (currentId === data.conversationId) navigate('/message');
+            break;
+
+          default:
+            console.warn("Unknown conversation message type:", data?.type);
+        }
+      } catch (error) {
+        addAlert({
+          type: "error",
+          message:
+            error?.response?.data?.message ||
+            error?.message ||
+            "Lỗi khi cập nhật danh sách cuộc trò chuyện.",
+        });
       }
     });
 
@@ -132,6 +169,11 @@ export const Menu = () => {
     }
 
   };
+
+  const checkIsDisabled = (conversation) => {
+    if (conversation.type !== "GROUP") return false;
+    return conversation.type === "GROUP" && !(conversation?.group?.admin?.id === user?.id);
+  }
 
   return (
     <div className="animate-slide-left-to-right flex flex-col h-screen w-full md:w-80 lg:w-96 border-r border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
@@ -224,20 +266,21 @@ export const Menu = () => {
                   >
                     <button
                       onClick={(e) => handleDeleteConversation(e, conv.id, true)}
-                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-zinc-700 text-gray-700 dark:text-gray-200"
+                      className="w-full text-left px-4 py-2 text-sm rounded-t-xl hover:bg-gray-100 dark:hover:bg-zinc-700 text-gray-700 dark:text-gray-200 flex items-center gap-2"
                     >
-                      Chỉ xóa cho bạn
+                      <Delete size={16} />
+                      <span>Xóa cho tôi</span>
                     </button>
                     <button
+                      disabled={checkIsDisabled(conv)}
                       onClick={(e) => handleDeleteConversation(e, conv.id, false)}
-                      className="w-full text-left px-4 py-2 text-sm hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400"
+                      className={`w-full text-left px-4 py-2 text-sm rounded-b-xl hover:bg-red-100 text-red-700 flex items-center gap-2 ${checkIsDisabled(conv) ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
-                      Xóa tất cả
+                      <Trash2 size={16} />
+                      <span>Xóa tất cả</span>
                     </button>
                   </div>
                 )}
-
-
 
                 {/* Unread Badge */}
                 {conv?.unreadCount > 0 && (

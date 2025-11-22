@@ -12,6 +12,14 @@ const conversationService = {
     deleteConversation: async (data) => {
         const response = await axiosInstance.delete('/conversation', {data});
         return response;
+    },
+    leaveAndKickGroup: async (data) => {
+        const response = await axiosInstance.put('/conversation/leave', data);
+        return response;
+    },
+    addMembersToGroup: async (data) => {
+        const response = await axiosInstance.put('/conversation/add-member', {data});
+        return response;
     }
 };
 

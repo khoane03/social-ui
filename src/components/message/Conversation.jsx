@@ -7,6 +7,8 @@ import conversationService from "../../service/conversationService";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAlerts } from "../../context/AlertContext";
 import { ConversationInfoModal } from "./ConversationInfoModal";
+import { useWebsocket } from "../../context/WsContext";
+import { useAuth } from "../../context/AuthContext";
 
 export const Conversation = () => {
   const [messages, setMessages] = useState([]);
@@ -15,12 +17,15 @@ export const Conversation = () => {
   const [selectedImages, setSelectedImages] = useState([]);
   const [menuMessageId, setMenuMessageId] = useState(null);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { chatConnected, subscribeChat } = useWebsocket();
   const { addAlert } = useAlerts();
   const inputRef = useRef(null);
   const menuRef = useRef(null);
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const conversationId = useParams().id;
+  const { user } = useAuth();
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -38,6 +43,48 @@ export const Conversation = () => {
     };
   }, [menuMessageId]);
 
+  useEffect(() => {
+    if (!chatConnected || !user) return;
+
+    const messageTopic = `/user/${user.id}/queue/messages/${conversationId}`;
+
+    const unsubscribe = subscribeChat(messageTopic, (data) => {
+      try {
+        console.log("Received new:", data);
+        switch (data?.type) {
+          case "new_message":
+            setMessages((prev) => [
+              ...prev,
+              {
+                ...data.message,
+                isMe: data.message.sender.id === user.id,
+              },
+            ]);
+            break;
+
+          case "update_message":
+            setMessages((prev) => {
+              return prev.map((msg) =>
+                msg.id === data.message.id
+                  ? data.message
+                  : msg
+              );  
+            });
+            break;
+          default:
+            console.warn("Unknown message type:", data?.type);
+        }
+
+
+      } catch (e) {
+        console.warn("Failed to parse message body:", e);
+      }
+    });
+
+    return () => {
+      if (typeof unsubscribe === "function") unsubscribe();
+    };
+  }, [chatConnected, subscribeChat, conversationId, user?.id]);
 
   useEffect(() => {
     (async () => {
@@ -45,7 +92,6 @@ export const Conversation = () => {
         const { data } = await chatService.getMessages(conversationId);
         const cvs = await conversationService.getConversations(conversationId);
         setMessages(data);
-        console.log("data messages:", data);
         setConversation(cvs.data);
       } catch (e) {
         console.error(e);

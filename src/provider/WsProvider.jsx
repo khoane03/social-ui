@@ -1,7 +1,7 @@
 import { createContext, useCallback, useEffect, useRef, useState } from 'react';
 import { Client } from '@stomp/stompjs';
 import { getAccessToken, getRefreshToken, setAccessToken } from '../service/storeService';
-import authService from '../service/authService';
+import axios from "axios";
 import { useAuth } from '../context/AuthContext';
 import { useAlerts } from '../context/AlertContext';
 
@@ -35,9 +35,10 @@ export const StompProvider = ({ children }) => {
                 isReconnectingRef.current = false;
                 return;
             }
-
-            const newToken = await authService.refreshToken(refresh);
-            const newAccess = newToken.data.accessToken;
+            const res = await axios.post("http://localhost:8080/auth/refresh", {
+                token: refresh,
+            });
+            const newAccess = res.data.data.accessToken;
             setAccessToken(newAccess);
 
             if (chatClientRef.current) {
@@ -48,10 +49,13 @@ export const StompProvider = ({ children }) => {
                 connectChat(newAccess);
                 isReconnectingRef.current = false;
             }, 1000);
-        } catch (e) {
+        } catch (error) {
             addAlert({
                 type: "error",
-                message: "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.",
+                message:
+                    error?.response?.data?.message ||
+                    error?.message ||
+                    "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.",
             });
             isReconnectingRef.current = false;
         }
@@ -95,16 +99,16 @@ export const StompProvider = ({ children }) => {
                 console.error('❌ Chat WS error', err);
             },
             onStompError: (frame) => {
-                console.error('❌ Chat STOMP error:', frame.headers?.message || frame.command);
-
-                const errorMsg = frame.headers?.message || '';
+                console.error('❌ Chat STOMP error', frame);
+                const errorMsg = frame.body || '';
                 console.log('errorMsg:', errorMsg);
                 if (
                     errorMsg.includes('Authentication failed') ||
                     errorMsg.includes('401') ||
                     errorMsg.includes('Unauthorized') ||
-                    errorMsg.includes('Missing Authorization') ||
-                    errorMsg.includes('Invalid token')
+                    errorMsg.includes('jwt expired') ||
+                    errorMsg.includes('Invalid token') ||
+                    errorMsg.includes('Lỗi đăng nhập!')
                 ) {
                     console.log('🔄 Token invalid, attempting to reconnect...');
                     reconnectWithNewToken();

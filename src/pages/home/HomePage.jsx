@@ -36,6 +36,8 @@ export const HomePage = () => {
     <div className="flex scroll-smooth">
       <div className="flex-1 md:px-6 md:py-4 max-w-2xl mx-auto">
         <div className="border min-h-screen border-b-wt dark:border-zinc-700 md:rounded-t-4xl">
+
+
           {/* new post */}
           <NewPost />
           {/* list post */}

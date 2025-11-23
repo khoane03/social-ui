@@ -6,9 +6,11 @@ import { Suggestion } from "../../components/suggestion/Suggestion";
 import { useAuth } from "../../context/AuthContext";
 import { useAlerts } from "../../context/AlertContext";
 import postService from "../../service/postService";
+import { Header } from "./Header";
 
 export const HomePage = () => {
   const [posts, setPosts] = useState([]);
+  const [activeTab, setActiveTab] = useState('public');
   const { user } = useAuth();
   const { addAlert } = useAlerts();
   
@@ -34,10 +36,11 @@ export const HomePage = () => {
 
   return (
     <div className="flex scroll-smooth">
-      <div className="flex-1 md:px-6 md:py-4 max-w-2xl mx-auto">
+      <div className="flex-1 md:px-6 pb-6 max-w-2xl mx-auto">
+        <Header activeTab={activeTab} onTabChange={setActiveTab} />
         <div className="border min-h-screen border-b-wt dark:border-zinc-700 md:rounded-t-4xl">
-
-
+          {/* Header */}
+          
           {/* new post */}
           <NewPost />
           {/* list post */}

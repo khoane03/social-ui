@@ -31,35 +31,30 @@ export const StompProvider = ({ children }) => {
 
         try {
             const refresh = getRefreshToken();
-            if (!refresh) {
-                isReconnectingRef.current = false;
-                return;
-            }
-            const res = await axios.post("http://localhost:8080/auth/refresh", {
-                token: refresh,
-            });
+            if (!refresh) return;
+
+            const res = await axios.post("http://localhost:8080/auth/refresh", { token: refresh });
+
             const newAccess = res.data.data.accessToken;
             setAccessToken(newAccess);
 
             if (chatClientRef.current) {
-                chatClientRef.current.deactivate();
+                await chatClientRef.current.deactivate(); // Đợi đóng hoàn toàn
+                chatClientRef.current = null;
             }
 
-            setTimeout(() => {
-                connectChat(newAccess);
-                isReconnectingRef.current = false;
-            }, 1000);
+            connectChat(newAccess);
+
         } catch (error) {
             addAlert({
                 type: "error",
-                message:
-                    error?.response?.data?.message ||
-                    error?.message ||
-                    "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.",
+                message: "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.",
             });
+        } finally {
             isReconnectingRef.current = false;
         }
-    }, [addAlert]);
+    }, []);
+
 
     // ===== WS CHAT =====
     const connectChat = useCallback((token) => {

@@ -112,7 +112,7 @@ export const Post = ({ post }) => {
         </div>
 
         <Images imgs={post?.urls} />
-        <Actions />
+        <Actions post={post}/>
 
         <AnimatePresence>
           {showMenu && isOwner && (

@@ -1,9 +1,12 @@
 import { BadgeCheck, LogOut, UserPlus } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { Link } from "react-router";
+import { ConfirmModal } from "../common/ConfirmModal";
+import { useState } from "react";
 
 export const Suggestion = () => {
   const { user, logout } = useAuth();
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const suggestions = [
     { username: "Lan cục cức", avatar: '"https://i.imgur.com/7VbD1Qm.png"' },
     { username: "Tester", avatar: '"https://i.imgur.com/7VbD1Qm.png"' },
@@ -16,6 +19,14 @@ export const Suggestion = () => {
   ];
   return (
     <>
+      {<ConfirmModal
+        isOpen={isModalOpen}
+        onClose={() =>setIsModalOpen(false)}
+        onConfirm={logout}
+        title="Xác nhận đăng xuất"
+        message="Bạn có chắc chắn muốn đăng xuất không?"
+        confirmText="Đăng xuất"
+      />}
       <div className="flex items-center justify-between mb-6 dark:text-white text-white-theme select-none">
         <div className="flex items-center gap-2">
           <img
@@ -28,7 +39,7 @@ export const Suggestion = () => {
 
           )}
         </div>
-        <button onClick={logout} className="hover:scale-105 hover:text-red-400 text-sm">
+        <button onClick={() => setIsModalOpen(true)} className="hover:scale-105 hover:text-red-400 text-sm">
           <LogOut />
         </button>
       </div>

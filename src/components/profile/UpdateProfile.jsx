@@ -40,7 +40,6 @@ export const UpdateProfile = ({ onClose }) => {
     e.preventDefault();
     try {
       await userService.updateUserProfile(user.id, formData);
-      addAlert({ type: "success", message: "Cập nhật thông tin cá nhân thành công!" });
       await getCurrentUser();
       onClose();
     } catch (error) {

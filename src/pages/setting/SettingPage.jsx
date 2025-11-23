@@ -5,10 +5,12 @@ import { ThemeToggleButton } from "../../components/button/ThemeToggleButton";
 import { UpdateProfile } from "../../components/profile/UpdateProfile";
 import { SettingModal } from "./SettingModal";
 import { useAuth } from "../../context/AuthContext";
+import { ConfirmModal } from "../../components/common/ConfirmModal";
 
 export const SettingPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [showSecurityModal, setShowSecurityModal] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { logout } = useAuth();
 
   const settings = useMemo(
@@ -35,7 +37,7 @@ export const SettingPage = () => {
         icon: <LogOut />,
         title: "Đăng xuất",
         description: "Đăng xuất khỏi tài khoản",
-        onClick: () => logout(),
+        onClick: () => setIsModalOpen(true),
       },
     ],
     []
@@ -60,6 +62,14 @@ export const SettingPage = () => {
       {showSecurityModal && (
         <SettingModal onClose={() => setShowSecurityModal(false)} />
       )}
+      {<ConfirmModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={logout}
+        title="Xác nhận đăng xuất"
+        message="Bạn có chắc chắn muốn đăng xuất không?"
+        confirmText="Đăng xuất"
+      />}
 
       <motion.div
         className="max-w-2xl mx-auto px-4 py-8"

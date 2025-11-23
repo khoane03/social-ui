@@ -7,14 +7,20 @@ import { useAlerts } from "../../context/AlertContext";
 import { formatTime } from "../../service/ultilsService";
 import { CreateConversationModal } from "./CreateConversationModal";
 import conversationService from "../../service/conversationService";
+import { ConfirmModal } from "../common/ConfirmModal";
+import { s } from "motion/react-m";
 
 export const Menu = () => {
   const { chatConnected, subscribeChat } = useWebsocket();
-  const { user } = useAuth();
   const [myConversations, setMyConversations] = useState([]);
   const [showCreateConversation, setShowCreateConversation] = useState(false);
-  const { addAlert } = useAlerts();
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { addAlert } = useAlerts();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const currentId = useParams().id;
 
@@ -65,7 +71,6 @@ export const Menu = () => {
             });
             break;
 
-
           case "delete_conversation":
             setMyConversations((prev) =>
               prev.filter((conv) => conv.id !== data.conversationId)
@@ -92,30 +97,30 @@ export const Menu = () => {
     };
   }, [chatConnected, subscribeChat, user?.id]);
 
-  const handleDeleteConversation = async (e, conversationId, deleteForMe) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log(`Deleting conversation ${conversationId}, deleteForMe: ${deleteForMe}`);
+  const handleConfirm = async () => {
+    if (!pendingDelete) return;
+
+    const { id, deleteForMe } = pendingDelete;
+
+    setIsDeleting(true);
     try {
       if (deleteForMe) {
-        await conversationService.deleteConversation(
-          {
-            conversationId,
-            type: "ONE"
-          }
-        );
-        addAlert({ type: "success", message: "Đã xóa cuộc trò chuyện cho bạn." });
+        await conversationService.leaveAndKickGroup({
+          conversationId: id,
+          userIds: [user.id],
+          type: "LEAVE"
+        });
+        addAlert({ type: "success", message: "Bạn đã rời nhóm." });
       } else {
-        await conversationService.deleteConversation(
-          {
-            conversationId,
-            type: "ALL"
-          }
-        );
-        addAlert({ type: "success", message: "Đã xóa cuộc trò chuyện cho tất cả mọi người." });
+        await conversationService.deleteConversation({
+          conversationId: id,
+          type: "ALL"
+        });
+        addAlert({ type: "success", message: "Nhóm đã giải tán." });
       }
-      setMyConversations((prev) => prev.filter((conv) => conv.id !== conversationId));
-      if (currentId === conversationId) navigate('/message');
+
+      setMyConversations(prev => prev.filter(c => c.id !== id));
+      if (currentId === id) navigate('/message');
       setOpenMenuId(null);
     } catch (error) {
       addAlert({
@@ -123,51 +128,54 @@ export const Menu = () => {
         message:
           error?.response?.data?.message ||
           error?.message ||
-          "Lỗi hệ thống, vui lòng thử lại!",
+          "Lỗi hệ thống, vui lòng thử lại!"
       });
     }
+
+    setIsDeleting(false);
+    setPendingDelete(null);
+    setIsModalOpen(false);
+  };
+
+  const openDeleteConfirm = (e, id, deleteForMe) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setPendingDelete({ id, deleteForMe });
+    setIsModalOpen(true);
   };
 
   const handleCreateConversation = async (conversationData) => {
     const formData = new FormData();
-    switch (conversationData.type) {
-      case "private":
-        try {
+    setIsLoading(true);
+    try {
+      switch (conversationData.type) {
+        case "private":
           formData.append("type", "PRIVATE");
           formData.append("memberIds", conversationData?.users[0]?.id);
 
           await conversationService.createConversation(formData);
           addAlert({ type: "success", message: "Cuộc trò chuyện đã được tạo thành công!" });
-        } catch (error) {
-          console.error("Error creating private conversation:", error);
-          addAlert({ type: "error", message: error?.response?.data?.message || "Lỗi hệ thống!" });
-        }
-        break;
+          break;
 
-      case "group":
-        try {
-          console.log("Creating group conversation with data:", conversationData);
+        case "group":
           formData.append("type", "GROUP");
           formData.append("groupName", conversationData?.groupName);
-          formData.set("memberIds", conversationData?.users.map(u => {
-            console.log("Adding member ID to formData:", u.id);
-            return u.id;
-          }).join(","));
+          formData.set("memberIds", conversationData?.users.map(u => u.id).join(","));
           formData.append("avatar", conversationData?.groupImage);
 
           await conversationService.createConversation(formData);
           addAlert({ type: "success", message: "Nhóm trò chuyện đã được tạo thành công!" });
-        } catch (error) {
-          console.error("Error creating group conversation:", error);
-          addAlert({ type: "error", message: error?.response?.data?.message || "Lỗi hệ thống!" });
-        }
-        break;
-
-      default:
-        addAlert({ type: "error", message: "Loại cuộc trò chuyện không hợp lệ." });
-        break;
+          break;
+        default:
+          addAlert({ type: "error", message: "Loại cuộc trò chuyện không hợp lệ." });
+          break;
+      }
+    } catch (error) {
+      addAlert({ type: "error", message: error?.response?.data?.message || "Lỗi hệ thống!" });
+    } finally {
+      setIsLoading(false);
+      setShowCreateConversation(false);
     }
-
   };
 
   const checkIsDisabled = (conversation) => {
@@ -177,6 +185,14 @@ export const Menu = () => {
 
   return (
     <div className="animate-slide-left-to-right flex flex-col h-screen w-full md:w-80 lg:w-96 border-r border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+      {<ConfirmModal
+        isOpen={isModalOpen}
+        onClose={() => !isDeleting && setIsModalOpen(false)}
+        onConfirm={handleConfirm}
+        title="Xác nhận hành động"
+        message="Bạn có chắc chắn muốn thực hiện hành động này không? Hành động này không thể hoàn tác."
+      />}
+
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-zinc-800">
         <h1 className="text-xl font-bold text-gray-800 dark:text-white">
@@ -265,7 +281,10 @@ export const Menu = () => {
                     className="absolute right-0 top-10 bg-white dark:bg-zinc-800 shadow-lg rounded-xl border border-gray-200 dark:border-zinc-700 w-44 z-50 animate-fade-in"
                   >
                     <button
-                      onClick={(e) => handleDeleteConversation(e, conv.id, true)}
+                      onClick={(e) => {
+                        openDeleteConfirm(e, conv.id, true);
+                        setOpenMenuId(null);
+                      }}
                       className="w-full text-left px-4 py-2 text-sm rounded-t-xl hover:bg-gray-100 dark:hover:bg-zinc-700 text-gray-700 dark:text-gray-200 flex items-center gap-2"
                     >
                       <Delete size={16} />
@@ -273,7 +292,10 @@ export const Menu = () => {
                     </button>
                     <button
                       disabled={checkIsDisabled(conv)}
-                      onClick={(e) => handleDeleteConversation(e, conv.id, false)}
+                      onClick={(e) => {
+                        openDeleteConfirm(e, conv.id, false)
+                        setOpenMenuId(null);
+                      }}
                       className={`w-full text-left px-4 py-2 text-sm rounded-b-xl hover:bg-red-100 text-red-700 flex items-center gap-2 ${checkIsDisabled(conv) ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
                       <Trash2 size={16} />
@@ -300,6 +322,7 @@ export const Menu = () => {
           isOpen={showCreateConversation}
           onClose={() => setShowCreateConversation(false)}
           onCreateConversation={handleCreateConversation}
+          loading={isLoading}
         />
       )}
     </div>

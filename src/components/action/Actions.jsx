@@ -2,7 +2,7 @@ import { MessageCircle, Heart } from "lucide-react";
 import { useState } from "react";
 import { AddComment } from "../comment/AddComment";
 import { useAuth } from "../../context/AuthContext";
-export const Actions = () => {
+export const Actions = (post) => {
   const { user } = useAuth();
   const [reactions, setReactions] = useState(0);
   const [comments, setComments] = useState(100);
@@ -39,7 +39,7 @@ export const Actions = () => {
               : "opacity-100 translate-y-0 scale-100 blur-0"
           }`}
         >
-          <AddComment />
+          <AddComment postId={post.post.id} />
         </div>
       )}
     </>

@@ -2,7 +2,7 @@ import { X, Search, Users, User, Check, Plus } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-export const CreateConversationModal = ({ isOpen, onClose, onCreateConversation }) => {
+export const CreateConversationModal = ({ isOpen, onClose, onCreateConversation, loading }) => {
   const [conversationType, setConversationType] = useState("private");
   const [groupName, setGroupName] = useState("");
   const [groupImage, setGroupImage] = useState(null);
@@ -19,7 +19,7 @@ export const CreateConversationModal = ({ isOpen, onClose, onCreateConversation 
       setIsLoading(true);
       setTimeout(() => {
         setFriends([
-          { id: '70298fe4-e99c-4f18-9f96-3f9237d3dc6e,', name: "Nguyễn Văn A", avatarUrl: "https://i.pravatar.cc/150?img=1", isOnline: true },
+          { id: '70298fe4-e99c-4f18-9f96-3f9237d3dc6e', name: "Nguyễn Văn A", avatarUrl: "https://i.pravatar.cc/150?img=1", isOnline: true },
           { id: 'a86d7b01-45a0-4e6d-aeae-9cd38e93c936', name: "Trần Thị B", avatarUrl: "https://i.pravatar.cc/150?img=2", isOnline: false },
           { id: 3, name: "Lê Văn C", avatarUrl: "https://i.pravatar.cc/150?img=3", isOnline: true },
           { id: 4, name: "Phạm Thị D", avatarUrl: "https://i.pravatar.cc/150?img=4", isOnline: true },
@@ -101,7 +101,6 @@ export const CreateConversationModal = ({ isOpen, onClose, onCreateConversation 
     };
 
     onCreateConversation(conversationData);
-    handleClose();
   };
 
   return (
@@ -424,7 +423,7 @@ export const CreateConversationModal = ({ isOpen, onClose, onCreateConversation 
                         : "bg-gray-200 dark:bg-zinc-800 text-gray-400 cursor-not-allowed"
                     }`}
                   >
-                    {conversationType === "private" ? "Bắt đầu chat" : "Tạo nhóm"}
+                    {loading ? "Đang tạo..." : (conversationType === "private" ? "Bắt đầu chat" : "Tạo nhóm")}
                   </button>
                 </div>
               </div>

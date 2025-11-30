@@ -6,12 +6,23 @@ const accountService = {
         return response;
     },
     changePass: async (data) => {
-        console.log(data)
         const response = await axiosInstance.put('/account/change-pass', data);
         return response;
     },
     twoFA: async (id) => {
         const response = await axiosInstance.put(`/account/two-factor-auth/${id}`);
+        return response;
+    },
+    statisticalAccounts: async () => {
+        const response = await axiosInstance.get('/account/statistical');
+        return response;
+    },
+    getAllAccounts: async () => {
+        const response = await axiosInstance.get('/account/all');
+        return response;
+    },
+    updateAccountStatus: async (accountId) => {
+        const response = await axiosInstance.put(`/account/change-status/${accountId}`);
         return response;
     },
 };

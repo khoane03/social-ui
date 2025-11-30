@@ -8,7 +8,6 @@ import { formatTime } from "../../service/ultilsService";
 import { CreateConversationModal } from "./CreateConversationModal";
 import conversationService from "../../service/conversationService";
 import { ConfirmModal } from "../common/ConfirmModal";
-import { s } from "motion/react-m";
 
 export const Menu = () => {
   const { chatConnected, subscribeChat } = useWebsocket();
@@ -26,17 +25,13 @@ export const Menu = () => {
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      // Nếu click vào button toggle menu, giữ nguyên
       if (e.target.closest("[data-menu-button]")) return;
-      // Nếu click vào menu, giữ nguyên
       if (e.target.closest("[data-menu-dropdown]")) return;
-      // Nếu không, đóng menu
       setOpenMenuId(null);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
 
   useEffect(() => {
     if (!chatConnected || !user?.id) return;
@@ -47,14 +42,23 @@ export const Menu = () => {
       try {
         switch (data?.type) {
           case "init_conversations":
-            setMyConversations(data?.conversations);
+            setMyConversations(data?.conversations || []);
             break;
 
           case "new_conversation":
-            setMyConversations((prev) => [
-              data.conversation,
-              ...prev
-            ]);
+            setMyConversations((prev) => {
+              // Check if conversation already exists
+              const exists = prev.find(c => c.id === data.conversation.id);
+              if (exists) {
+                // Move to top if exists
+                return [
+                  data.conversation,
+                  ...prev.filter(c => c.id !== data.conversation.id)
+                ];
+              }
+              // Add new conversation at top
+              return [data.conversation, ...prev];
+            });
             break;
 
           case "update_conversation":
@@ -62,11 +66,8 @@ export const Menu = () => {
               if (!data?.conversation) return prev;
 
               const updated = data.conversation;
-
-              // Xóa bản cũ nếu tồn tại
               const filtered = prev.filter(c => c.id !== updated.id);
 
-              // Đưa lên đầu danh sách
               return [updated, ...filtered];
             });
             break;
@@ -95,7 +96,7 @@ export const Menu = () => {
     return () => {
       if (typeof unsubscribe === "function") unsubscribe();
     };
-  }, [chatConnected, subscribeChat, user?.id]);
+  }, [chatConnected, subscribeChat, user?.id, currentId, navigate, addAlert]);
 
   const handleConfirm = async () => {
     if (!pendingDelete) return;
@@ -105,13 +106,13 @@ export const Menu = () => {
     setIsDeleting(true);
     try {
       if (deleteForMe) {
-        await conversationService.leaveAndKickGroup({
+        await conversationService.deleteConversation({
           conversationId: id,
-          userIds: [user.id],
-          type: "LEAVE"
+          type: "ONE"
         });
         addAlert({ type: "success", message: "Bạn đã rời nhóm." });
       } else {
+        console.log("Deleting for all");
         await conversationService.deleteConversation({
           conversationId: id,
           type: "ALL"
@@ -147,31 +148,94 @@ export const Menu = () => {
   const handleCreateConversation = async (conversationData) => {
     const formData = new FormData();
     setIsLoading(true);
+    
     try {
+      let response;
+      
       switch (conversationData.type) {
         case "private":
+          // Check if private conversation already exists
+          const existingPrivate = myConversations.find(conv => 
+            conv.type === "PRIVATE" && 
+            conv.members?.some(member => member.id === conversationData?.users[0]?.id)
+          );
+
+          if (existingPrivate) {
+            addAlert({ 
+              type: "info", 
+              message: "Cuộc trò chuyện đã tồn tại!" 
+            });
+            navigate(`/message/${existingPrivate.id}`);
+            setShowCreateConversation(false);
+            setIsLoading(false);
+            return;
+          }
+
           formData.append("type", "PRIVATE");
           formData.append("memberIds", conversationData?.users[0]?.id);
 
-          await conversationService.createConversation(formData);
-          addAlert({ type: "success", message: "Cuộc trò chuyện đã được tạo thành công!" });
+          response = await conversationService.createConversation(formData);
+          
+          if (response?.data?.id) {
+            navigate(`/message/${response.data.id}`);
+            addAlert({ 
+              type: "success", 
+              message: "Cuộc trò chuyện đã được tạo thành công!" 
+            });
+          }
           break;
 
         case "group":
           formData.append("type", "GROUP");
           formData.append("groupName", conversationData?.groupName);
-          formData.set("memberIds", conversationData?.users.map(u => u.id).join(","));
-          formData.append("avatar", conversationData?.groupImage);
+          formData.append("memberIds", conversationData?.users.map(u => u.id).join(","));
+          
+          if (conversationData?.groupImage) {
+            formData.append("avatar", conversationData?.groupImage);
+          }
 
-          await conversationService.createConversation(formData);
-          addAlert({ type: "success", message: "Nhóm trò chuyện đã được tạo thành công!" });
+          response = await conversationService.createConversation(formData);
+          
+          if (response?.data?.id) {
+            navigate(`/message/${response.data.id}`);
+            addAlert({ 
+              type: "success", 
+              message: "Nhóm trò chuyện đã được tạo thành công!" 
+            });
+          }
           break;
+
         default:
-          addAlert({ type: "error", message: "Loại cuộc trò chuyện không hợp lệ." });
+          addAlert({ 
+            type: "error", 
+            message: "Loại cuộc trò chuyện không hợp lệ." 
+          });
           break;
       }
     } catch (error) {
-      addAlert({ type: "error", message: error?.response?.data?.message || "Lỗi hệ thống!" });
+      console.error("Create conversation error:", error);
+      
+      // Handle specific error for existing conversation
+      if (error?.response?.status === 409) {
+        const existingId = error?.response?.data?.conversationId;
+        if (existingId) {
+          navigate(`/message/${existingId}`);
+          addAlert({ 
+            type: "info", 
+            message: "Cuộc trò chuyện đã tồn tại!" 
+          });
+        } else {
+          addAlert({ 
+            type: "error", 
+            message: "Cuộc trò chuyện đã tồn tại nhưng không thể truy cập." 
+          });
+        }
+      } else {
+        addAlert({ 
+          type: "error", 
+          message: error?.response?.data?.message || error?.message || "Lỗi hệ thống!" 
+        });
+      }
     } finally {
       setIsLoading(false);
       setShowCreateConversation(false);
@@ -181,17 +245,17 @@ export const Menu = () => {
   const checkIsDisabled = (conversation) => {
     if (conversation.type !== "GROUP") return false;
     return conversation.type === "GROUP" && !(conversation?.group?.admin?.id === user?.id);
-  }
+  };
 
   return (
     <div className="animate-slide-left-to-right flex flex-col h-screen w-full md:w-80 lg:w-96 border-r border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-      {<ConfirmModal
+      <ConfirmModal
         isOpen={isModalOpen}
         onClose={() => !isDeleting && setIsModalOpen(false)}
         onConfirm={handleConfirm}
         title="Xác nhận hành động"
         message="Bạn có chắc chắn muốn thực hiện hành động này không? Hành động này không thể hoàn tác."
-      />}
+      />
 
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-zinc-800">
@@ -202,11 +266,10 @@ export const Menu = () => {
         <button
           onClick={() => setShowCreateConversation(true)}
           className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
-          title="Tạo nhóm mới"
+          title="Tạo cuộc trò chuyện mới"
         >
           <Plus size={20} className="text-gray-600 dark:text-gray-400" />
         </button>
-
       </div>
 
       {/* Conversations List */}
@@ -219,6 +282,12 @@ export const Menu = () => {
             <p className="text-gray-500 dark:text-gray-400 text-sm">
               Chưa có cuộc trò chuyện nào
             </p>
+            <button
+              onClick={() => setShowCreateConversation(true)}
+              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+            >
+              Tạo cuộc trò chuyện
+            </button>
           </div>
         ) : (
           <div className="divide-y divide-gray-100 dark:divide-zinc-800">
@@ -226,7 +295,9 @@ export const Menu = () => {
               <Link
                 key={conv.id}
                 to={`/message/${conv.id}`}
-                className="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors relative group"
+                className={`flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors relative group ${
+                  currentId === conv.id ? 'bg-gray-50 dark:bg-zinc-800/50' : ''
+                }`}
               >
                 {/* Avatar */}
                 <div className="relative flex-shrink-0">
@@ -251,17 +322,18 @@ export const Menu = () => {
                     )}
                   </div>
 
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
                     <p className="text-sm text-gray-600 dark:text-gray-400 truncate flex-1">
                       {conv?.lastMessage || "Bắt đầu cuộc trò chuyện"}
-                      <Dot size={30} className="inline-block w-2 h-2 mx-1 text-gray-400 flex-shrink-0" />
-                      {formatTime(conv?.lastMessageDate)}
                     </p>
+                    <Dot size={16} className="text-gray-400 flex-shrink-0" />
+                    <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
+                      {formatTime(conv?.lastMessageDate)}
+                    </span>
                   </div>
-
                 </div>
 
-                {/* Delete Button */}
+                {/* Menu Button */}
                 <button
                   data-menu-button
                   onClick={(e) => {
@@ -278,14 +350,14 @@ export const Menu = () => {
                 {openMenuId === conv.id && (
                   <div
                     data-menu-dropdown
-                    className="absolute right-0 top-10 bg-white dark:bg-zinc-800 shadow-lg rounded-xl border border-gray-200 dark:border-zinc-700 w-44 z-50 animate-fade-in"
+                    className="absolute right-12 top-10 bg-white dark:bg-zinc-800 shadow-lg rounded-xl border border-gray-200 dark:border-zinc-700 w-44 z-50 overflow-hidden"
                   >
                     <button
                       onClick={(e) => {
                         openDeleteConfirm(e, conv.id, true);
                         setOpenMenuId(null);
                       }}
-                      className="w-full text-left px-4 py-2 text-sm rounded-t-xl hover:bg-gray-100 dark:hover:bg-zinc-700 text-gray-700 dark:text-gray-200 flex items-center gap-2"
+                      className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-100 dark:hover:bg-zinc-700 text-gray-700 dark:text-gray-200 flex items-center gap-2 transition-colors"
                     >
                       <Delete size={16} />
                       <span>Xóa cho tôi</span>
@@ -293,10 +365,12 @@ export const Menu = () => {
                     <button
                       disabled={checkIsDisabled(conv)}
                       onClick={(e) => {
-                        openDeleteConfirm(e, conv.id, false)
+                        openDeleteConfirm(e, conv.id, false);
                         setOpenMenuId(null);
                       }}
-                      className={`w-full text-left px-4 py-2 text-sm rounded-b-xl hover:bg-red-100 text-red-700 flex items-center gap-2 ${checkIsDisabled(conv) ? "opacity-50 cursor-not-allowed" : ""}`}
+                      className={`w-full text-left px-4 py-2.5 text-sm hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 flex items-center gap-2 transition-colors ${
+                        checkIsDisabled(conv) ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
                     >
                       <Trash2 size={16} />
                       <span>Xóa tất cả</span>
@@ -306,8 +380,8 @@ export const Menu = () => {
 
                 {/* Unread Badge */}
                 {conv?.unreadCount > 0 && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
-                    {conv.unreadCount > 9 ? "9+" : conv.unreadCount}
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 bg-blue-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5 font-semibold">
+                    {conv.unreadCount > 99 ? "99+" : conv.unreadCount}
                   </div>
                 )}
               </Link>

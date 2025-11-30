@@ -3,9 +3,11 @@ import {
   ChevronRight
 } from "lucide-react";
 import { useState } from "react";
+import { ImageModal } from "../common/ImageModal";
 
 export const Images = ({ imgs }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   if (!imgs || imgs.length === 0) {
     return;
@@ -19,26 +21,37 @@ export const Images = ({ imgs }) => {
     setCurrentIndex((prev) => (prev - 1 + imgs.length) % imgs.length);
   };
 
+  const handleImageClick = () => {
+    setIsModalOpen(true);
+  };
+
   return (
+    <>
+     <ImageModal
+        imageUrl={imgs[currentIndex]}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+     />
     <div className="relative w-full max-w-2xl mx-auto aspect-video dark:bg-black bg-white flex items-center justify-center rounded-xl overflow-hidden">
       <img
         src={imgs[currentIndex]}
         alt={`post-${currentIndex}`}
-        className="max-h-full max-w-full object-contain transition duration-300"
+        className="max-h-full max-w-full object-contain transition duration-300 cursor-pointer"
+        onClick={handleImageClick}
       />
 
       {imgs.length > 1 && (
-        <div className="absolute inset-0 flex justify-between items-center px-4">
+        <div className="absolute inset-0 flex justify-between items-center px-4 pointer-events-none">
           <button
             onClick={handlePrev}
-            className="bg-black/40 hover:bg-black/70 text-white p-1 rounded-full transition duration-200"
+            className="bg-black/40 hover:bg-black/70 text-white p-1 rounded-full transition duration-200 pointer-events-auto"
           >
             <ChevronLeft className="w-6 h-6" />
           </button>
 
           <button
             onClick={handleNext}
-            className="bg-black/40 hover:bg-black/70 text-white p-1 rounded-full transition duration-200"
+            className="bg-black/40 hover:bg-black/70 text-white p-1 rounded-full transition duration-200 pointer-events-auto"
           >
             <ChevronRight className="w-6 h-6" />
           </button>
@@ -58,5 +71,6 @@ export const Images = ({ imgs }) => {
         </div>
       )}
     </div>
+    </>
   );
 };

@@ -1,8 +1,14 @@
 import axiosInstance from "./axiosService";
 
 const notificationService = {
-    getNotifications: async (id) => {
-        const response = await axiosInstance.get(`/notification/${id}`);
+    getNotifications: async (id, page, size) => {
+        const response = await axiosInstance.get(`/notification/${id}`, {
+            params: { page, size }
+        });
+        return response;
+    },
+    countUnRead: async (id) => {
+        const response = await axiosInstance.get(`/notification/count/${id}`);
         return response;
     },
     markAsRead: async (notificationId) => {

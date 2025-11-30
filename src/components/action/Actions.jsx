@@ -1,16 +1,27 @@
 import { MessageCircle, Heart } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AddComment } from "../comment/AddComment";
-import { useAuth } from "../../context/AuthContext";
+import { useAlerts } from "../../context/AlertContext";
+import actionService from "../../service/actionService";
+
 export const Actions = (post) => {
-  const { user } = useAuth();
   const [reactions, setReactions] = useState(0);
   const [comments, setComments] = useState(100);
   const [isHidden, setIsHidden] = useState(true);
+  const {addAlert} = useAlerts();
 
-  const handleHeartClick = () => {
-    setReactions((prev) => prev + 1);
+  const handleHeartClick = async () => {
+   try {
+    await actionService.likePost(post?.post?.id);
+    
+   } catch (error) {
+      addAlert({
+        type: "error",
+        message: "Đã có lỗi xảy ra khi thích bài viết.",
+      });
+   }
   };
+
   const handleCommentClick = () => {};
 
   return (

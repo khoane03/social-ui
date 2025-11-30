@@ -4,8 +4,7 @@ import { getAccessToken, getRefreshToken, removeAccessToken, removeRefreshToken,
 const noAuthEndpoints = ["/auth", "/auth/refresh"];
 
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:8080",
-  timeout: 10000,
+  baseURL: "http://localhost:8080"
 });
 
 axiosInstance.interceptors.request.use(

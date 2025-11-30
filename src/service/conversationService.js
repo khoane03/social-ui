@@ -10,6 +10,7 @@ const conversationService = {
         return response;
     },
     deleteConversation: async (data) => {
+        console.log("Deleting conversation with data:", data);
         const response = await axiosInstance.delete('/conversation', {data});
         return response;
     },

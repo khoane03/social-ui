@@ -1,12 +1,14 @@
 import { FileUser, GalleryVerticalEnd, Images, Users } from "lucide-react";
-import { NavLink } from "react-router";
+import { NavLink, useParams } from "react-router";
 
 export const Menu = () => {
+  const userId = useParams().id;
+
   const menuItems = [
-    { to: "/profile", icon: <GalleryVerticalEnd /> },
-    { to: "/profile/friends", icon: <Users /> },
-    { to: "/profile/images", icon: <Images /> },
-    { to: "/profile/info", icon: <FileUser /> },
+    { to: `/profile/${userId}`, icon: <GalleryVerticalEnd /> },
+    { to: `/profile/${userId}/friend`, icon: <Users /> },
+    { to: `/profile/${userId}/images`, icon: <Images /> },
+    { to: `/profile/${userId}/info`, icon: <FileUser /> },
   ];
 
   return (

@@ -20,6 +20,7 @@ import { PostManagerPage } from "../pages/dashboard/PostManagerPage";
 import { RoleManagerPage } from "../pages/dashboard/RoleManagerPage";
 import { NoPermission } from "../pages/error/NoPermisstion";
 import ModalUpdateProfile from "../components/auth/ModalUpdateProfile";
+import { RequestManagerPage } from "../pages/dashboard/RequestManagerPage";
 
 const AppRoute = () => {
   return (
@@ -28,15 +29,12 @@ const AppRoute = () => {
         <Route element={<PrivateRoute />}>
           <Route path="/" element={<MainLayout />}>
             <Route index element={<HomePage />} />
-            <Route path="friends" element={<FriendPage />} />
+            <Route path="friend" element={<FriendPage />} />
             <Route path="settings" element={<SettingPage />} />
             <Route path="profile" element={<ProfileLayout />}>
               <Route index element={<ProfilePage />} />
-              <Route path="friends" element={<FriendPage />} />
-              <Route path="images" element={<Image />} />
-              <Route path="info" element={<Info />} />
               <Route path=":id" element={<ProfilePage />} />
-              <Route path=":id/friends" element={<FriendPage />} />
+              <Route path=":id/friend" element={<FriendPage />} />
               <Route path=":id/images" element={<Image />} />
               <Route path=":id/info" element={<Info />} />
             </Route>
@@ -58,6 +56,7 @@ const AppRoute = () => {
             <Route path="account" element={<AccountManagerPage />} />
             <Route path="post" element={<PostManagerPage />} />
             <Route path="info" element={<AdminProfilePage />} />
+            <Route path="request" element={<RequestManagerPage />} />
             <Route path="add-role" element={<RoleManagerPage />} />
           </Route>
         </Route>

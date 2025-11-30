@@ -1,15 +1,18 @@
 import { BadgeCheck, MapPin, SwitchCamera, X, Upload } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { UpdateProfile } from "./UpdateProfile";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import userService from "../../service/userService";
 import { useAlerts } from "../../context/AlertContext";
 import { ImageModal } from "../common/ImageModal";
+import { useParams } from "react-router";
+import postService from "../../service/postService";
 
 export const Header = () => {
   const { user, getCurrentUser } = useAuth();
   const { addAlert } = useAlerts();
+  const userId = useParams().id;
 
   const [updateProfile, setUpdateProfile] = useState(false);
   const [showImageUpload, setShowImageUpload] = useState(false);
@@ -17,9 +20,45 @@ export const Header = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [imageToView, setImageToView] = useState(null);
+  const [userInfo, setUserInfo] = useState(null);
+  const [postCount, setPostCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) return; // user chưa load, đợi
+
+    if (user.id === userId) {
+      setUserInfo(user);
+      fetchCountPosts(userId);
+      return;
+    }
+
+    (async () => {
+      try {
+        const response = await userService.getUserById(userId);
+        fetchCountPosts(userId);
+        setUserInfo(response.data);
+      } catch (error) {
+        addAlert({
+          type: "error",
+          message:
+            error?.response?.data?.message ||
+            error?.message ||
+            "Lỗi hệ thống, vui lòng thử lại!"
+        });
+      }
+    })();
+  }, [user, userId]);
+
+  const fetchCountPosts = async (userId) => {
+    try {
+      const { data } = await postService.countByAuthor(userId);
+      setPostCount(data?.totalPosts || 0);
+    } catch (error) {
+
+    }
+  };
 
   const openUploadModal = (type) => {
     setUploadType(type);
@@ -86,6 +125,23 @@ export const Header = () => {
       setIsUploading(false);
     }
   };
+
+  const isOwnProfile = user && user.id === userId;
+
+  const Stats = () => (
+    <div className="flex items-center justify-center md:justify-start">
+      <Stat label="Bài viết" value={postCount} />
+      <Stat label="Bạn bè" value="100+" className="ml-4" />
+    </div>
+  );
+
+  const Stat = ({ label, value, className }) => (
+    <div className={className}>
+      <span className="font-semibold text-white">{value}</span>
+      <span className="ml-2">{label}</span>
+    </div>
+  );
+
 
   return (
     <>
@@ -205,10 +261,10 @@ export const Header = () => {
 
       <header
         style={{
-          backgroundImage: user?.coverUrl ? `url(${user.coverUrl})` : "cover_default.jpg",
+          backgroundImage: userInfo?.coverUrl ? `url(${userInfo.coverUrl})` : "url(/cover_default.jpg)",
         }}
         onClick={() => {
-          setImageToView(user?.coverUrl || "cover_default.jpg");
+          setImageToView(userInfo?.coverUrl || "/cover_default.jpg");
           setIsModalOpen(true);
         }}
         className="relative select-none md:rounded-2xl bg-cover bg-center p-4 md:p-6 flex flex-col md:flex-row items-center gap-4 md:gap-6 dark:text-white text-bg-white-theme"
@@ -218,20 +274,19 @@ export const Header = () => {
             <div className="text-white font-semibold animate-pulse">Đang tải...</div>
           </div>
         )}
-
-        <motion.button
-          whileHover={{ scale: 1.1, rotate: 15 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={(e) => {
-            e.stopPropagation();
-            openUploadModal("COVER");
-          }}
-          className="absolute bottom-2 right-2 w-10 h-10 z-30 bg-white/90 dark:bg-gray-800/90 rounded-full p-2 flex items-center justify-center shadow-lg"
-        >
-          <SwitchCamera className="w-6 h-6" />
-        </motion.button>
-
-
+        {
+          isOwnProfile && <motion.button
+            whileHover={{ scale: 1.1, rotate: 15 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              openUploadModal("COVER");
+            }}
+            className="absolute bottom-2 right-2 w-10 h-10 z-30 bg-white/90 dark:bg-gray-800/90 rounded-full p-2 flex items-center justify-center shadow-lg"
+          >
+            <SwitchCamera className="w-6 h-6" />
+          </motion.button>
+        }
         <div className="absolute inset-0 bg-black/60 md:rounded-2xl z-0" />
 
         <div className="relative rounded-2xl z-10 flex flex-col md:flex-row items-center gap-4 w-full">
@@ -239,11 +294,11 @@ export const Header = () => {
             <img
               onClick={(e) => {
                 e.stopPropagation();
-                setImageToView(user?.avatarUrl || "default.png");
+                setImageToView(userInfo?.avatarUrl || "/default.png");
                 setIsModalOpen(true);
               }}
               className="w-24 h-24 md:w-36 md:h-36 rounded-full object-cover border-4 border-gray-700 shadow-md"
-              src={user?.avatarUrl || "default.png"}
+              src={userInfo?.avatarUrl || "/default.png"}
               alt="Profile"
             />
 
@@ -253,32 +308,33 @@ export const Header = () => {
               </div>
             )}
 
-            <motion.button
-              whileHover={{ scale: 1.15, rotate: 15 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={(e) => {
-                e.stopPropagation();
-                openUploadModal("AVATAR");
-              }}
-              className="absolute bottom-1 right-1 w-9 h-9 bg-gray-800/90 backdrop-blur-sm rounded-full p-1.5 text-white flex items-center justify-center shadow-lg"
-            >
-              <SwitchCamera className="w-5 h-5" />
-            </motion.button>
+            {isOwnProfile &&
+              <motion.button
+                whileHover={{ scale: 1.15, rotate: 15 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openUploadModal("AVATAR");
+                }}
+                className="absolute bottom-1 right-1 w-9 h-9 bg-gray-800/90 backdrop-blur-sm rounded-full p-1.5 text-white flex items-center justify-center shadow-lg"
+              >
+                <SwitchCamera className="w-5 h-5" />
+              </motion.button>}
           </div>
 
           <div className="w-full md:w-auto">
             <div className="flex justify-center md:justify-start items-center mb-2">
               <h1 className="text-lg md:text-3xl font-bold text-white drop-shadow-md">
-                {user?.fullName}
+                {userInfo?.fullName}
               </h1>
-              {user?.isVerified && <BadgeCheck className="ml-1 text-green-500 w-4 h-4" />}
+              {userInfo?.isVerified && <BadgeCheck className="ml-1 text-green-500 w-4 h-4" />}
             </div>
 
             <div className="flex flex-col text-xs md:text-sm text-zinc-300">
               <Stats />
               <div className="flex items-center mt-1 justify-center md:justify-start">
                 <MapPin className="w-5 h-5 text-white" />
-                <span className="ml-2">{user?.address}</span>
+                <span className="ml-2">{userInfo?.address}</span>
               </div>
             </div>
           </div>
@@ -288,16 +344,3 @@ export const Header = () => {
   );
 };
 
-const Stats = () => (
-  <div className="flex items-center justify-center md:justify-start">
-    <Stat label="Bài viết" value="100+" />
-    <Stat label="Bạn bè" value="100+" className="ml-4" />
-  </div>
-);
-
-const Stat = ({ label, value, className }) => (
-  <div className={className}>
-    <span className="font-semibold text-white">{value}</span>
-    <span className="ml-2">{label}</span>
-  </div>
-);

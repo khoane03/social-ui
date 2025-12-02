@@ -18,7 +18,7 @@ const friendService = {
         return response;
     },
     checkFriendStatus: async (id) => {
-        const response = await axiosInstance.get(`/friend/check`, { id });
+        const response = await axiosInstance.get(`/friend/check/${id}`);
         return response;
     },
     sendFriendRequest: async (id) => {

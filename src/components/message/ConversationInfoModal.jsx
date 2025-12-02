@@ -101,6 +101,15 @@ export const ConversationInfoModal = ({ isOpen, onClose, conversation }) => {
                     if (currentId === conversation.id) navigate('/message');
                     break;
 
+                case "DELETE_GROUP":
+                    await conversationService.deleteConversation({
+                        conversationId: conversation.id,
+                        type: "ALL"
+                    });
+                    addAlert({ type: "success", message: "Nhóm đã được giải tán." });
+                    if (currentId === conversation.id) navigate('/message');
+                    break;
+
                 default:
                     addAlert({ type: "error", message: "Hành động không hợp lệ!" });
                     break;
@@ -338,11 +347,22 @@ export const ConversationInfoModal = ({ isOpen, onClose, conversation }) => {
                                         whileTap={{ scale: 0.98 }}
                                         onClick={() => openConfirm("LEAVE_GROUP")}
                                         disabled={isProcessing}
-                                        className={`w-full flex items-center justify-center gap-2 px-4 py-3 font-medium rounded-xl transition-colors
+                                        className={`w-full flex items-center justify-center gap-2 px-4 py-3 font-medium rounded-xl transition-colors mb-2
                                             ${isProcessing ? "bg-red-300 cursor-not-allowed text-white" : "bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400"}`}
                                     >
                                         {renderButtonWithSpinner(<><LogOut size={18} />Rời khỏi nhóm</>, isProcessing)}
                                     </motion.button>
+
+                                    {isAdmin && <motion.button
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={() => openConfirm("DELETE_GROUP")}
+                                        disabled={isProcessing}
+                                        className={`w-full flex items-center justify-center gap-2 px-4 py-3 font-medium rounded-xl transition-colors
+                                            ${isProcessing ? "bg-red-300 cursor-not-allowed text-white" : "bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400"}`}
+                                    >
+                                        {renderButtonWithSpinner(<><LogOut size={18} />Giải tán nhóm</>, isProcessing)}
+                                    </motion.button>}
                                 </div>
 
                             </div>

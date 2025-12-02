@@ -1,4 +1,4 @@
-import { BadgeCheck, MapPin, SwitchCamera, X, Upload } from "lucide-react";
+import { BadgeCheck, MapPin, SwitchCamera, X, Upload, UserMinus, UserPlus, UserCheck, UserX } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { UpdateProfile } from "./UpdateProfile";
 import { useEffect, useState } from "react";
@@ -8,6 +8,7 @@ import { useAlerts } from "../../context/AlertContext";
 import { ImageModal } from "../common/ImageModal";
 import { useParams } from "react-router";
 import postService from "../../service/postService";
+import friendService from "../../service/friendService";
 
 export const Header = () => {
   const { user, getCurrentUser } = useAuth();
@@ -24,6 +25,7 @@ export const Header = () => {
   const [imageToView, setImageToView] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
   const [postCount, setPostCount] = useState(0);
+  const [friendStatus, setFriendStatus] = useState(null);
 
   useEffect(() => {
     if (!user) return; // user chưa load, đợi
@@ -37,6 +39,9 @@ export const Header = () => {
     (async () => {
       try {
         const response = await userService.getUserById(userId);
+        const { data } = await friendService.checkFriendStatus(userId);
+        console.log("Friend status data:", data);
+        setFriendStatus(data);
         fetchCountPosts(userId);
         setUserInfo(response.data);
       } catch (error) {
@@ -336,6 +341,52 @@ export const Header = () => {
                 <MapPin className="w-5 h-5 text-white" />
                 <span className="ml-2">{userInfo?.address}</span>
               </div>
+              {!isOwnProfile && (
+                <>
+                  {friendStatus === "ACCEPTED" && (
+                    <div className="mt-3 flex items-center gap-3">
+                      <span className="px-3 py-1.5 bg-green-500/10 text-green-600 dark:text-green-400 rounded-lg text-sm font-medium flex items-center gap-2">
+                        <BadgeCheck size={16} /> Bạn bè
+                      </span>
+
+                      <button
+                        // onClick={handleUnfriend}
+                        className="px-4 py-2 bg-red-500/10 text-red-600 dark:text-red-400 rounded-lg font-medium flex items-center gap-2 hover:bg-red-500/20 transition"
+                      >
+                        <UserMinus size={16} /> Hủy kết bạn
+                      </button>
+                    </div>
+                  )}
+
+                  {friendStatus === "REQUESTED" && (
+                    <div className="mt-3 flex items-center gap-3">
+                      <button
+                        // onClick={handleAccept}
+                        className="px-4 py-2 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-lg font-medium flex items-center gap-2 hover:bg-blue-500/20 transition"
+                      >
+                        <UserCheck size={16} /> Chấp nhận
+                      </button>
+
+                      <button
+                        // onClick={handleReject}
+                        className="px-4 py-2 bg-gray-500/10 text-gray-600 dark:text-gray-400 rounded-lg font-medium flex items-center gap-2 hover:bg-gray-500/20 transition"
+                      >
+                        <UserX size={16} /> Từ chối
+                      </button>
+                    </div>
+                  )}
+
+                  {friendStatus !== "ACCEPTED" && friendStatus !== "REQUESTED" && (
+                    <button
+                      // onClick={handleAddFriend}
+                      className="mt-3 px-4 py-2 bg-white/90 dark:bg-gray-800/90 text-gray-900 dark:text-white rounded-lg font-medium hover:bg-white/100 dark:hover:bg-gray-800/100 flex items-center gap-2 transition"
+                    >
+                      <UserPlus size={16} /> Thêm bạn bè
+                    </button>
+                  )}
+                </>
+              )}
+
             </div>
           </div>
         </div>

@@ -1,4 +1,3 @@
-import { del } from "motion/react-client";
 import axiosInstance from "./axiosService";
 
 const postService = {
@@ -16,6 +15,22 @@ const postService = {
     },
     getAllPosts: async (page, size) => {
         const response = await axiosInstance.get('/post/public', { params: { page, size } });
+        return response;
+    },
+    getPostFriends: async (page, size) => {
+        const response = await axiosInstance.get('/post/friend', { params: { page, size } });
+        return response;
+    },
+    getByAdmin: async (page, size) => {
+        const response = await axiosInstance.get('/post/admin', { params: { page, size } });
+        return response;
+    },
+    updatePost: async (postData) => {
+        const response = await axiosInstance.put('/post', postData);
+        return response;
+    },
+    countPostByMonth: async () => {
+        const response = await axiosInstance.put('/post/statistical');
         return response;
     },
     countAll: async () => {

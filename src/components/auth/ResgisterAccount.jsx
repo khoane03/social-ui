@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
-import { AtSign, Eye, EyeOff, LockKeyhole, RotateCcw } from "lucide-react";
+import { AtSign, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAlerts } from "../../context/AlertContext";
 import { useCallback, useState } from "react";
 
-export const RegisterAccount = ({ onSubmit }) => {
+export const RegisterAccount = ({ onSubmit, loading }) => {
     const { addAlert } = useAlerts();
     const [showPassword, setShowPassword] = useState(false);
     const [form, setForm] = useState({
@@ -24,7 +24,7 @@ export const RegisterAccount = ({ onSubmit }) => {
         const { email, password, confirmPassword } = form;
 
         if (!email || !password || !confirmPassword) {
-            addAlert({ type: "error", message: "Vui lòng điền đầy đủ thông tin" });
+            addAlert({ type: "error", message: "Vui lòng điền đầy đủ thông tin" });
             return;
         }
 
@@ -52,7 +52,7 @@ export const RegisterAccount = ({ onSubmit }) => {
         if (password !== confirmPassword) {
             addAlert({
                 type: "error",
-                message: "Mật khẩu và xác nhận mật khẩu không khớp",
+                message: "Mật khẩu và xác nhận mật khẩu không khớp",
             });
             return;
         }
@@ -60,6 +60,11 @@ export const RegisterAccount = ({ onSubmit }) => {
         onSubmit(form);
     };
 
+    const handleKeyPress = useCallback((e) => {
+        if (e.key === "Enter" && !loading) {
+            handleSubmit();
+        }
+    }, [loading]);
 
     return (
         <motion.div
@@ -74,15 +79,18 @@ export const RegisterAccount = ({ onSubmit }) => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1, duration: 0.3 }}
-                className="flex items-center bg-gray-200 px-3 py-3 rounded-2xl justify-between"
+                className="flex items-center bg-gray-200 dark:bg-gray-800 px-4 py-3 rounded-2xl border-2 border-transparent focus-within:border-[#7F9FEF] transition-colors"
             >
                 <input
                     type="text"
-                    className="flex-1 bg-transparent focus:outline-none px-2"
+                    className="flex-1 bg-transparent focus:outline-none px-2 dark:text-white"
                     placeholder="Nhập Email"
+                    value={form.email}
                     onChange={(e) => handleChange("email", e.target.value)}
+                    onKeyDown={handleKeyPress}
+                    disabled={loading}
                 />
-                <AtSign className="text-gray-500" />
+                <AtSign className="text-gray-500 dark:text-gray-400" size={20} />
             </motion.div>
 
             {/* Password */}
@@ -90,21 +98,27 @@ export const RegisterAccount = ({ onSubmit }) => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2, duration: 0.3 }}
-                className="flex items-center bg-gray-200 px-3 py-3 rounded-2xl justify-between"
+                className="flex items-center bg-gray-200 dark:bg-gray-800 px-4 py-3 rounded-2xl border-2 border-transparent focus-within:border-[#7F9FEF] transition-colors"
             >
                 <input
                     type={showPassword ? "text" : "password"}
-                    className="flex-1 bg-transparent focus:outline-none px-2"
+                    className="flex-1 bg-transparent focus:outline-none px-2 dark:text-white"
                     placeholder="Nhập mật khẩu"
+                    value={form.password}
                     onChange={(e) => handleChange("password", e.target.value)}
+                    onKeyDown={handleKeyPress}
+                    disabled={loading}
                 />
-               <button
-                  type="button"
-                  onClick={togglePasswordVisibility}
-                  className="text-gray-500 hover:text-gray-700"
+                <motion.button
+                    whileHover={!loading ? { scale: 1.1 } : {}}
+                    whileTap={!loading ? { scale: 0.9 } : {}}
+                    type="button"
+                    onClick={togglePasswordVisibility}
+                    disabled={loading}
+                    className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors disabled:opacity-50"
                 >
-                  {showPassword ? <Eye /> : <EyeOff />}
-                </button>
+                    {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+                </motion.button>
             </motion.div>
 
             {/* Confirm Password */}
@@ -112,36 +126,45 @@ export const RegisterAccount = ({ onSubmit }) => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3, duration: 0.3 }}
-                className="flex items-center bg-gray-200 px-3 py-3 rounded-2xl justify-between"
+                className="flex items-center bg-gray-200 dark:bg-gray-800 px-4 py-3 rounded-2xl border-2 border-transparent focus-within:border-[#7F9FEF] transition-colors"
             >
                 <input
                     type={showPassword ? "text" : "password"}
-                    className="flex-1 bg-transparent focus:outline-none px-2"
+                    className="flex-1 bg-transparent focus:outline-none px-2 dark:text-white"
                     placeholder="Nhập lại mật khẩu"
+                    value={form.confirmPassword}
                     onChange={(e) => handleChange("confirmPassword", e.target.value)}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                            handleSubmit();
-                        }
-                    }}
+                    onKeyDown={handleKeyPress}
+                    disabled={loading}
                 />
-                <button
-                  type="button"
-                  onClick={togglePasswordVisibility}
-                  className="text-gray-500 hover:text-gray-700"
+                <motion.button
+                    whileHover={!loading ? { scale: 1.1 } : {}}
+                    whileTap={!loading ? { scale: 0.9 } : {}}
+                    type="button"
+                    onClick={togglePasswordVisibility}
+                    disabled={loading}
+                    className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors disabled:opacity-50"
                 >
-                  {showPassword ? <Eye /> : <EyeOff />}
-                </button>
+                    {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+                </motion.button>
             </motion.div>
 
             {/* Submit button */}
             <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={!loading ? { scale: 1.02 } : {}}
+                whileTap={!loading ? { scale: 0.98 } : {}}
                 onClick={handleSubmit}
-                className="w-full bg-[#7F9FEF] hover:bg-blue-400 text-white font-semibold py-2.5 rounded-2xl transition-colors duration-300 mt-2"
+                disabled={loading}
+                className="w-full bg-[#7F9FEF] text-white font-semibold py-3 rounded-2xl flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#7F9FEF]/30 hover:shadow-xl hover:shadow-[#7F9FEF]/40 transition-all duration-300 mt-2"
             >
-                Đăng ký
+                {loading ? (
+                    <>
+                        <Loader2 className="animate-spin" size={20} />
+                        <span>Đang xử lý...</span>
+                    </>
+                ) : (
+                    "Tiếp tục"
+                )}
             </motion.button>
         </motion.div>
     );

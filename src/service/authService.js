@@ -21,5 +21,9 @@ const authService = {
         const response = await axiosInstance.post('/auth/refresh', { refreshToken });
         return response;
     },
+    forgetPass: async (email) => {
+        const response = await axiosInstance.post('/auth/forgot', { email });
+        return response;
+    }
 };
 export default authService;

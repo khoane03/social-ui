@@ -24,7 +24,7 @@ const accountService = {
     updateAccountStatus: async (accountId) => {
         const response = await axiosInstance.put(`/account/change-status/${accountId}`);
         return response;
-    },
+    }
 };
 
 export default accountService;

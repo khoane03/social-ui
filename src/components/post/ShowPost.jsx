@@ -28,7 +28,7 @@ export const ShowPost = ({ onClose, post }) => {
           </span>
           <div className="w-8"></div> {/* Spacer for center alignment */}
         </div>
-        <Post post={post} />
+        <Post post={post} isInModal={true}/>
         <ListComment postId={post.id} />
       </div>
     </div>

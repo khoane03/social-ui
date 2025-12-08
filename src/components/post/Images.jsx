@@ -1,76 +1,133 @@
-import {
-  ChevronLeft,
-  ChevronRight
-} from "lucide-react";
 import { useState } from "react";
 import { ImageModal } from "../common/ImageModal";
 
 export const Images = ({ imgs }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalIndex, setModalIndex] = useState(0);
 
-  if (!imgs || imgs.length === 0) {
-    return;
-  }
+  if (!imgs || imgs.length === 0) return null;
 
-  const handleNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % imgs.length);
-  };
-
-  const handlePrev = () => {
-    setCurrentIndex((prev) => (prev - 1 + imgs.length) % imgs.length);
-  };
-
-  const handleImageClick = () => {
+  const openModal = (index) => {
+    setModalIndex(index);
     setIsModalOpen(true);
   };
 
+  const closeModal = () => setIsModalOpen(false);
+
+  const renderSingle = () => (
+    <div className="mt-3 rounded-xl overflow-hidden bg-black/5 dark:bg-black">
+      <img
+        src={imgs[0]}
+        alt="post"
+        className="w-full max-h-[500px] object-cover cursor-pointer transition hover:brightness-95"
+        onClick={() => openModal(0)}
+      />
+    </div>
+  );
+
+  const renderTwo = () => (
+    <div className="mt-3 grid grid-cols-2 gap-1 rounded-xl overflow-hidden bg-black/5 dark:bg-black">
+      {imgs.slice(0, 2).map((img, i) => (
+        <button
+          key={i}
+          type="button"
+          className="relative aspect-[4/5] overflow-hidden"
+          onClick={() => openModal(i)}
+        >
+          <img
+            src={img}
+            alt={`post-${i}`}
+            className="w-full h-full object-cover cursor-pointer transition hover:scale-[1.02]"
+          />
+        </button>
+      ))}
+    </div>
+  );
+
+  const renderThree = () => (
+    <div className="mt-3 grid grid-cols-2 gap-1 rounded-xl overflow-hidden bg-black/5 dark:bg-black">
+      <button
+        type="button"
+        className="relative col-span-2 aspect-video overflow-hidden"
+        onClick={() => openModal(0)}
+      >
+        <img
+          src={imgs[0]}
+          alt="post-0"
+          className="w-full h-full object-cover cursor-pointer transition hover:scale-[1.02]"
+        />
+      </button>
+      {imgs.slice(1, 3).map((img, i) => (
+        <button
+          key={i + 1}
+          type="button"
+          className="relative aspect-square overflow-hidden"
+          onClick={() => openModal(i + 1)}
+        >
+          <img
+            src={img}
+            alt={`post-${i + 1}`}
+            className="w-full h-full object-cover cursor-pointer transition hover:scale-[1.02]"
+          />
+        </button>
+      ))}
+    </div>
+  );
+
+  const renderMany = () => {
+    const shown = imgs.slice(0, 4);         // chỉ render tối đa 4 ảnh
+    const moreCount = imgs.length - 4;
+
+    return (
+      <div className="mt-3 grid grid-cols-2 gap-1 rounded-xl overflow-hidden bg-black/5 dark:bg-black">
+        {shown.map((img, i) => {
+          const isLast = i === 3 && moreCount > 0;
+          return (
+            <button
+              key={i}
+              type="button"
+              className={`relative overflow-hidden ${
+                i === 0 ? "col-span-2 aspect-video" : "aspect-square"
+              }`}
+              // important: index theo mảng gốc, không phải `shown`
+              onClick={() => openModal(i)}
+            >
+              <img
+                src={img}
+                alt={`post-${i}`}
+                className="w-full h-full object-cover cursor-pointer transition hover:scale-[1.02]"
+              />
+              {isLast && (
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                  <span className="text-white font-semibold text-xl">
+                    +{moreCount}
+                  </span>
+                </div>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const count = imgs.length;
+  let content;
+  if (count === 1) content = renderSingle();
+  else if (count === 2) content = renderTwo();
+  else if (count === 3) content = renderThree();
+  else content = renderMany();
+
   return (
     <>
-     <ImageModal
-        imageUrl={imgs[currentIndex]}
+      {content}
+      <ImageModal
+        // CHỈNH: truyền cả list + index để modal xem hết ảnh
+        images={imgs}
+        currentIndex={modalIndex}
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-     />
-    <div className="relative w-full max-w-2xl mx-auto aspect-video dark:bg-black bg-white flex items-center justify-center rounded-xl overflow-hidden">
-      <img
-        src={imgs[currentIndex]}
-        alt={`post-${currentIndex}`}
-        className="max-h-full max-w-full object-contain transition duration-300 cursor-pointer"
-        onClick={handleImageClick}
+        onClose={closeModal}
       />
-
-      {imgs.length > 1 && (
-        <div className="absolute inset-0 flex justify-between items-center px-4 pointer-events-none">
-          <button
-            onClick={handlePrev}
-            className="bg-black/40 hover:bg-black/70 text-white p-1 rounded-full transition duration-200 pointer-events-auto"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-
-          <button
-            onClick={handleNext}
-            className="bg-black/40 hover:bg-black/70 text-white p-1 rounded-full transition duration-200 pointer-events-auto"
-          >
-            <ChevronRight className="w-6 h-6" />
-          </button>
-        </div>
-      )}
-
-      {imgs.length > 1 && (
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1">
-          {imgs.map((_, index) => (
-            <div
-              key={index}
-              className={`w-2 h-2 rounded-full ${
-                index === currentIndex ? "dark:bg-white bg-black" : "bg-zinc-500 "
-              }`}
-            />
-          ))}
-        </div>
-      )}
-    </div>
     </>
   );
 };

@@ -15,23 +15,9 @@ import { motion } from "framer-motion";
 import CountUp from "react-countup";
 import { useState, useEffect } from "react";
 import accountService from "../../service/accountService";
+import postService from "../../service/postService";
 
 const COLORS = ["#00C49F", "#FB2C37"];
-
-const postData = [
-  { month: "Th1", baiViet: 30 },
-  { month: "Th2", baiViet: 45 },
-  { month: "Th3", baiViet: 60 },
-  { month: "Th4", baiViet: 50 },
-  { month: "Th5", baiViet: 70 },
-  { month: "Th6", baiViet: 40 },
-  { month: "Th7", baiViet: 40 },
-  { month: "Th8", baiViet: 80 },
-  { month: "Th9", baiViet: 100 },
-  { month: "Th10", baiViet: 40 },
-  { month: "Th11", baiViet: 40 },
-  { month: "Th12", baiViet: 40 },
-];
 
 // Custom Tooltip với animation
 const CustomTooltip = ({ active, payload }) => {
@@ -100,6 +86,13 @@ export const DashboardCharts = () => {
     { name: "Đang hoạt động", value: 0 },
     { name: "Bị khóa", value: 0 },
   ]);
+
+  const [postData, setPostData] = useState(
+    Array.from({ length: 12 }, (_, i) => ({
+      month: `Th${i + 1}`,
+      baiViet: 0,
+    }))
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [pieAnimationComplete, setPieAnimationComplete] = useState(false);
   const [barAnimationComplete, setBarAnimationComplete] = useState(false);
@@ -113,13 +106,29 @@ export const DashboardCharts = () => {
     const fetchUserStats = async () => {
       try {
         setIsLoading(true);
-        const { data } = await accountService.statisticalAccounts();
-        console.log("User statistics:", data);
         
+        const [{ data }, postRes] = await Promise.all([
+          accountService.statisticalAccounts(),
+          postService.countPostByMonth(),
+        ]);
+
         setUserData([
           { name: "Đang hoạt động", value: data.active || 0 },
           { name: "Bị khóa", value: data.inactive || 0 },
         ]);
+
+         const apiPosts = postRes?.data || [];
+
+        const monthly = Array.from({ length: 12 }, (_, i) => {
+          const m = i + 1;
+          const found = apiPosts.find((p) => p.month === m);
+          return {
+            month: `Th${m}`,
+            baiViet: found ? found.total : 0,
+          };
+        });
+
+        setPostData(monthly);
       } catch (error) {
         console.error("Error fetching user statistics:", error);
       } finally {

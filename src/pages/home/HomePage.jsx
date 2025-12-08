@@ -7,6 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useAlerts } from "../../context/AlertContext";
 import postService from "../../service/postService";
 import { Header } from "./Header";
+import friendService from "../../service/friendService";
 
 export const HomePage = () => {
   const [posts, setPosts] = useState([]);
@@ -19,7 +20,7 @@ export const HomePage = () => {
   const { addAlert } = useAlerts();
   const observerRef = useRef();
   const lastPostRef = useRef();
-  
+
   useEffect(() => {
     document.title = 'Trang cá nhân';
   }, []);
@@ -33,42 +34,59 @@ export const HomePage = () => {
       } else {
         setIsLoading(true);
       }
-      
+
       let response;
       const pageSize = 10;
-      
+
       switch (activeTab) {
         case 'public':
           response = await postService.getAllPosts(pageNum, pageSize);
-          console.log("Bài viết công khai:", response);
+
+          // Filter blocked users' posts
+          const filteredPosts = [];
+          for (const post of response.data) {
+            if (post.author.id !== user.id) {
+              try {
+                const { data } = await friendService.checkFriendStatus(post.author.id);
+                if (data !== 'BLOCKED') {
+                  filteredPosts.push(post);
+                }
+              } catch (error) {
+                // If check fails, include the post to avoid blocking all posts
+                filteredPosts.push(post);
+              }
+            } else {
+              // Always include user's own posts
+              filteredPosts.push(post);
+            }
+          }
+          response.data = filteredPosts;
           break;
-          
+
         case 'friends':
-          response = await postService.getFriendsPosts(pageNum, pageSize);
-          console.log("Bài viết bạn bè:", response.data);
+          response = await postService.getPostFriends(pageNum, pageSize);
           break;
-          
+
         case 'mine':
           response = await postService.getPostusers(user.id, pageNum, pageSize);
-          console.log("Bài viết của tôi:", response);
           break;
-          
+
         default:
           response = await postService.getAllPosts(pageNum, pageSize);
       }
-      
+
       const newPosts = response.data || [];
-      
+
       if (newPosts.length < pageSize) {
         setHasMore(false);
       }
-      
+
       if (isLoadMore) {
         setPosts(prev => [...prev, ...newPosts]);
       } else {
         setPosts(newPosts);
       }
-      
+
     } catch (error) {
       console.error("Lỗi tải bài viết:", error);
       addAlert({
@@ -109,13 +127,13 @@ export const HomePage = () => {
       rootMargin: "100px",
       threshold: 0.1
     };
-    
+
     observerRef.current = new IntersectionObserver(handleObserver, option);
-    
+
     if (lastPostRef.current) {
       observerRef.current.observe(lastPostRef.current);
     }
-    
+
     return () => {
       if (observerRef.current) {
         observerRef.current.disconnect();
@@ -135,9 +153,9 @@ export const HomePage = () => {
     if (observerRef.current && lastPostRef.current) {
       observerRef.current.unobserve(lastPostRef.current);
     }
-    
+
     lastPostRef.current = node;
-    
+
     if (observerRef.current && node) {
       observerRef.current.observe(node);
     }
@@ -150,7 +168,7 @@ export const HomePage = () => {
         <div className="border min-h-screen border-b-wt dark:border-zinc-700 md:rounded-t-4xl">
           {/* New post */}
           <NewPost />
-          
+
           {/* List posts */}
           {isLoading ? (
             <motion.div
@@ -169,7 +187,7 @@ export const HomePage = () => {
                 {posts.length > 0 ? (
                   posts.map((post, index) => {
                     const isLastPost = index === posts.length - 1;
-                    
+
                     return (
                       <motion.div
                         key={post.id || index}
@@ -177,8 +195,8 @@ export const HomePage = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
-                        transition={{ 
-                          duration: 0.4, 
+                        transition={{
+                          duration: 0.4,
                           ease: "easeOut",
                           delay: Math.min(index * 0.05, 0.3)
                         }}

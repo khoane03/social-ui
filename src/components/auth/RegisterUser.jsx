@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { UserRound, MapPin } from "lucide-react";
+import { UserRound, MapPin, Loader2 } from "lucide-react";
 import { useAlerts } from "../../context/AlertContext";
 
-const RegisterUser = ({ onSubmit }) => {
+const RegisterUser = ({ onSubmit, loading }) => {
     const { addAlert } = useAlerts();
     const [form, setForm] = useState({
         fullName: "",
@@ -82,16 +82,17 @@ const RegisterUser = ({ onSubmit }) => {
                 initial={{ opacity: 0, x: -30 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3 }}
-                className="flex items-center bg-gray-200 px-3 py-3 rounded-2xl justify-between"
+                className="flex items-center bg-gray-200 dark:bg-gray-800 px-3 py-3 rounded-2xl justify-between border-2 border-transparent focus-within:border-[#7F9FEF] transition-colors"
             >
                 <input
                     type="text"
-                    className="flex-1 bg-transparent focus:outline-none px-2 placeholder:text-sm"
+                    className="flex-1 bg-transparent focus:outline-none px-2 placeholder:text-sm dark:text-white"
                     placeholder="Nhập họ tên"
                     value={form.fullName}
                     onChange={(e) => handleChange("fullName", e.target.value)}
+                    disabled={loading}
                 />
-                <UserRound className="text-gray-500" />
+                <UserRound className="text-gray-500 dark:text-gray-400" size={20} />
             </motion.div>
 
             {/* Địa chỉ */}
@@ -99,33 +100,38 @@ const RegisterUser = ({ onSubmit }) => {
                 initial={{ opacity: 0, x: -30 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3, delay: 0.1 }}
-                className="flex items-center bg-gray-200 px-3 py-3 rounded-2xl justify-between"
+                className="flex items-center bg-gray-200 dark:bg-gray-800 px-3 py-3 rounded-2xl justify-between border-2 border-transparent focus-within:border-[#7F9FEF] transition-colors"
             >
                 <input
                     type="text"
-                    className="flex-1 bg-transparent focus:outline-none px-2 placeholder:text-sm"
+                    className="flex-1 bg-transparent focus:outline-none px-2 placeholder:text-sm dark:text-white"
                     placeholder="Nhập địa chỉ"
                     value={form.address}
                     onChange={(e) => handleChange("address", e.target.value)}
+                    disabled={loading}
                 />
 
                 <motion.button
-                    whileTap={{ scale: 0.9 }}
+                    whileHover={!loadingLocation && !loading ? { scale: 1.1 } : {}}
+                    whileTap={!loadingLocation && !loading ? { scale: 0.9 } : {}}
                     onClick={handleGetLocation}
-                    disabled={loadingLocation}
-                    className={`p-2 rounded-full transition-all duration-300
-      ${loadingLocation ? "bg-blue-100 cursor-wait" : "hover:bg-blue-100 active:bg-blue-200"}
-    `}
+                    disabled={loadingLocation || loading}
+                    className={`p-2 rounded-full transition-all duration-300 ${
+                        loadingLocation || loading
+                            ? "bg-blue-100 dark:bg-blue-900/30 cursor-wait"
+                            : "hover:bg-blue-100 dark:hover:bg-blue-900/50 active:bg-blue-200 dark:active:bg-blue-900"
+                    }`}
                 >
                     <MapPin
-                        size={22}
-                        className={`transition-colors duration-300
-        ${loadingLocation ? "animate-pulse text-blue-500" : "text-gray-600 hover:text-blue-600"}
-      `}
+                        size={20}
+                        className={`transition-colors duration-300 ${
+                            loadingLocation
+                                ? "animate-pulse text-blue-500"
+                                : "text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
+                        }`}
                     />
                 </motion.button>
             </motion.div>
-
 
             {/* Giới tính & Ngày sinh */}
             <motion.div
@@ -134,31 +140,33 @@ const RegisterUser = ({ onSubmit }) => {
                 transition={{ duration: 0.3, delay: 0.2 }}
                 className="flex gap-3"
             >
-                <div className="flex-1 bg-gray-200 px-3 py-3 rounded-2xl">
+                <div className="flex-1 bg-gray-200 dark:bg-gray-800 px-3 py-3 rounded-2xl border-2 border-transparent focus-within:border-[#7F9FEF] transition-colors">
                     <select
                         id="gender"
-                        className="w-full bg-transparent text-sm focus:outline-none"
+                        className="w-full bg-transparent text-sm focus:outline-none dark:text-white cursor-pointer"
                         value={form.gender}
                         onChange={(e) => handleChange("gender", e.target.value)}
+                        disabled={loading}
                     >
-                        <option value="">Giới tính</option>
-                        <option value="MALE">Nam</option>
-                        <option value="FEMALE">Nữ</option>
-                        <option value="OTHER">Khác</option>
+                        <option value="" className="dark:bg-gray-800">Giới tính</option>
+                        <option value="MALE" className="dark:bg-gray-800">Nam</option>
+                        <option value="FEMALE" className="dark:bg-gray-800">Nữ</option>
+                        <option value="OTHER" className="dark:bg-gray-800">Khác</option>
                     </select>
                 </div>
 
-                <div className="flex-1 bg-gray-200 px-3 py-3 rounded-2xl">
+                <div className="flex-1 bg-gray-200 dark:bg-gray-800 px-3 py-3 rounded-2xl border-2 border-transparent focus-within:border-[#7F9FEF] transition-colors">
                     <input
                         type="date"
-                        className="w-full bg-transparent text-sm focus:outline-none"
+                        className="w-full bg-transparent text-sm focus:outline-none dark:text-white cursor-pointer dark:[color-scheme:dark]"
                         value={form.dayOfBirth}
                         onChange={(e) => handleChange("dayOfBirth", e.target.value)}
                         onKeyDown={(e) => {
-                            if (e.key === "Enter") {
+                            if (e.key === "Enter" && !loading) {
                                 handleSubmit();
                             }
                         }}
+                        disabled={loading}
                     />
                 </div>
             </motion.div>
@@ -168,15 +176,23 @@ const RegisterUser = ({ onSubmit }) => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="w-full max-w-sm p-4"
+                className="w-full max-w-sm"
             >
                 <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={!loading ? { scale: 1.02 } : {}}
+                    whileTap={!loading ? { scale: 0.98 } : {}}
                     onClick={handleSubmit}
-                    className="w-full bg-[#7F9FEF] hover:bg-blue-400 text-white font-semibold py-2.5 rounded-2xl transition-colors duration-300 mt-2"
+                    disabled={loading}
+                    className="w-full bg-[#7F9FEF] text-white font-semibold py-3 rounded-2xl flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#7F9FEF]/30 hover:shadow-xl hover:shadow-[#7F9FEF]/40 transition-all duration-300"
                 >
-                    Tiếp tục
+                    {loading ? (
+                        <>
+                            <Loader2 className="animate-spin" size={20} />
+                            <span>Đang xử lý...</span>
+                        </>
+                    ) : (
+                        "Hoàn tất"
+                    )}
                 </motion.button>
             </motion.div>
         </motion.div>

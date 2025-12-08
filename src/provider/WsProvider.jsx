@@ -24,28 +24,54 @@ export const StompProvider = ({ children }) => {
 
     const { user } = useAuth();
     const { addAlert } = useAlerts();
-
-    const reconnectWithNewToken = useCallback(async () => {
+const reconnectWithNewToken = useCallback(async () => {
         if (isReconnectingRef.current) return;
         isReconnectingRef.current = true;
 
         try {
             const refresh = getRefreshToken();
-            if (!refresh) return;
-
+            if (!refresh) {
+                console.error('❌ No refresh token available');
+                return;
+            }
+å
+            console.log('🔄 Refreshing access token...');
             const res = await axios.post("http://localhost:8080/auth/refresh", { token: refresh });
+            console.log('✅ Token refreshed successfully');
 
             const newAccess = res.data.data.accessToken;
             setAccessToken(newAccess);
 
+            // Disconnect completely before reconnecting
             if (chatClientRef.current) {
-                await chatClientRef.current.deactivate(); // Đợi đóng hoàn toàn
-                chatClientRef.current = null;
+                console.log('🔌 Deactivating old chat connection...');
+                try {
+                    // Unsubscribe first
+                    if (chatSubscriptionRef.current) {
+                        chatSubscriptionRef.current.unsubscribe();
+                        chatSubscriptionRef.current = null;
+                    }
+
+                    // Then deactivate
+                    await chatClientRef.current.deactivate();
+                    chatClientRef.current = null;
+                    setChatConnected(false);
+                    console.log('✅ Old connection closed');
+                } catch (e) {
+                    console.warn('⚠️ Error during deactivation:', e);
+                    chatClientRef.current = null;
+                    setChatConnected(false);
+                }
             }
 
+            // Wait a bit before reconnecting
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            console.log('🔌 Reconnecting with new token...');
             connectChat(newAccess);
 
         } catch (error) {
+            console.error('❌ Token refresh failed:', error);
             addAlert({
                 type: "error",
                 message: "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.",
@@ -54,17 +80,22 @@ export const StompProvider = ({ children }) => {
             isReconnectingRef.current = false;
         }
     }, []);
-
-
     // ===== WS CHAT =====
     const connectChat = useCallback((token) => {
         if (!user?.id) {
             console.warn('⚠️ Cannot connect chat: user.id is missing');
             return;
         }
-        if (chatClientRef.current?.active) {
-            console.log('ℹ️ Chat already connected');
-            return;
+
+        // Force cleanup if there's an existing client
+        if (chatClientRef.current) {
+            console.log('🧹 Cleaning up existing client...');
+            try {
+                chatClientRef.current.deactivate();
+            } catch (e) {
+                console.warn('⚠️ Error cleaning up client:', e);
+            }
+            chatClientRef.current = null;
         }
 
         console.log('🔌 Connecting to chat server...');
@@ -85,8 +116,9 @@ export const StompProvider = ({ children }) => {
                     try {
                         chatSubscriptionRef.current.unsubscribe();
                     } catch (e) {
-                        console.warn('Failed to unsubscribe old chat subscription', e);
+                        console.warn('⚠️ Failed to unsubscribe old chat subscription', e);
                     }
+                    chatSubscriptionRef.current = null;
                 }
             },
 
@@ -96,7 +128,7 @@ export const StompProvider = ({ children }) => {
             onStompError: (frame) => {
                 console.error('❌ Chat STOMP error', frame);
                 const errorMsg = frame.body || '';
-                console.log('errorMsg:', errorMsg);
+
                 if (
                     errorMsg.includes('Authentication failed') ||
                     errorMsg.includes('401') ||
@@ -118,7 +150,6 @@ export const StompProvider = ({ children }) => {
         client.activate();
         chatClientRef.current = client;
     }, [user?.id, reconnectWithNewToken]);
-
 
     // ===== WS NOTIFICATION =====
     const connectNotification = useCallback(() => {
@@ -225,51 +256,6 @@ export const StompProvider = ({ children }) => {
         console.log('✅ All connections closed');
     }, []);
 
-    const sendChat = useCallback((destination, data) => {
-        if (!chatClientRef.current?.connected) {
-            console.warn('⚠️ Chat not connected, cannot send message');
-            return false;
-        }
-        try {
-            chatClientRef.current.publish({
-                destination: destination,
-                body: JSON.stringify(data),
-                headers: {
-                    "content-type": "application/json"
-                }
-            });
-            return true;
-        } catch (e) {
-            console.error('❌ Failed to send chat message:', e);
-            addAlert({
-                type: "error",
-                message: "Đã có lỗi xảy ra khi gửi tin nhắn.",
-            });
-            return false;
-        }
-    }, [addAlert]);
-
-    /**
-     * Gửi message đến một user cụ thể
-     * @param {string} recipientId - ID của người nhận
-     * @param {string} message - Nội dung tin nhắn
-     * @param {object} extraData - Dữ liệu thêm (optional)
-     */
-    const sendMessageToUser = useCallback((recipientId, message, extraData = {}) => {
-        if (!chatClientRef.current?.connected) {
-            console.warn('⚠️ Chat not connected');
-            return false;
-        }
-
-        // STOMP sử dụng SEND command, không cần destination cụ thể
-        // Backend sẽ xử lý và route đến đúng user
-        return sendChat('/app/chat', {
-            to: recipientId,
-            message: message,
-            ...extraData
-        });
-    }, [sendChat]);
-
     const subscribeChat = useCallback((destination, callback) => {
         if (!chatClientRef.current?.connected) return null;
         try {
@@ -330,8 +316,6 @@ export const StompProvider = ({ children }) => {
             value={{
                 chatConnected,
                 notifyConnected,
-                sendChat,
-                sendMessageToUser,
                 subscribeNotify,
                 subscribeChat,
                 disconnect,

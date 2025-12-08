@@ -21,6 +21,8 @@ import { RoleManagerPage } from "../pages/dashboard/RoleManagerPage";
 import { NoPermission } from "../pages/error/NoPermisstion";
 import ModalUpdateProfile from "../components/auth/ModalUpdateProfile";
 import { RequestManagerPage } from "../pages/dashboard/RequestManagerPage";
+import { PostPage } from "../pages/home/Post";
+import ForgotPassword from "../pages/auth/ForgotPassword";
 
 const AppRoute = () => {
   return (
@@ -39,6 +41,7 @@ const AppRoute = () => {
               <Route path=":id/info" element={<Info />} />
             </Route>
             <Route path="required-update-profile" element={<ModalUpdateProfile />} />
+            <Route path="post/:id" element={<PostPage />} />
           </Route>
           <Route path="/message" element={<MessageLayout />}>
             <Route index element={<MessagePage />} />
@@ -48,6 +51,7 @@ const AppRoute = () => {
         <Route path="/auth" element={<AuthLayout />}>
           <Route index element={<LoginPage />} />
           <Route path="register" element={<SignUpPage />} />
+          <Route path="forgot-password" element={<ForgotPassword />} />
         </Route>
 
         <Route element={<PrivateRoute onlyAdmin redirectTo="/no-permission" />}>

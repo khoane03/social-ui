@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router";
 import chatService from "../../service/chatService";
 import conversationService from "../../service/conversationService";
+import friendService from "../../service/friendService"
 import { formatTime } from "../../service/ultilsService";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAlerts } from "../../context/AlertContext";
@@ -22,6 +23,7 @@ export const Conversation = () => {
   const [isOpenImage, setIsOpenImage] = useState(false);
   const [loadingSend, setLoadingSend] = useState(false);
   const [currentImageUrl, setCurrentImageUrl] = useState("");
+  const [isBlocked, setIsBlocked] = useState(false);
 
   const { chatConnected, subscribeChat } = useWebsocket();
   const { addAlert } = useAlerts();
@@ -86,20 +88,30 @@ export const Conversation = () => {
 
   // Fetch messages & conversation info
   useEffect(() => {
+    if (!user) return;
     (async () => {
       try {
         const [mess, cov] = await Promise.all([
           chatService.getMessages(conversationId),
-          conversationService.getConversations(conversationId)
+          conversationService.getConversations(conversationId),
         ]);
-        console.log('cov.data:', cov.data);
+        const friend = cov.data.participants.find(p => p.userId !== user.id);
+
+        const { data } = await friendService.checkFriendStatus(friend.id);
+        console.log('friend status:', data);
+        if (data === 'BLOCKED') {
+          setIsBlocked(true);
+        } else {
+          setIsBlocked(false);
+        }
+        console.log('status:', cov.data);
         setMessages(mess.data);
         setConversation(cov.data);
       } catch (e) {
         console.error(e);
       }
     })();
-  }, [conversationId]);
+  }, [conversationId, user]);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -442,44 +454,75 @@ export const Conversation = () => {
               )}
             </AnimatePresence>
 
-            <div className="flex items-end gap-2">
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                accept="image/*"
-                multiple
-                onChange={handleImageSelect}
-              />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="p-2.5 sm:p-3 rounded-full bg-gray-100 dark:bg-zinc-800 text-blue-500 dark:text-blue-400 hover:bg-gray-200 dark:hover:bg-zinc-700 transition-all hover:scale-105 shrink-0"
-              >
-                <Image size={20} />
-              </button>
-              <div className="flex-1 bg-gray-100 dark:bg-zinc-800 rounded-3xl px-4 py-2 flex items-center min-w-0">
-                <textarea
-                  ref={inputRef}
-                  value={messageText}
-                  onChange={(e) => setMessageText(e.target.value)}
-                  onKeyDown={handleKeyPress}
-                  placeholder="Nhập tin nhắn..."
-                  rows={1}
-                  className="w-full bg-transparent text-gray-900 dark:text-white focus:outline-none resize-none max-h-32 placeholder-gray-500 dark:placeholder-gray-400 text-sm sm:text-base"
-                  style={{ minHeight: "24px" }}
-                />
-              </div>
-              <button
-                onClick={handleSend}
-                disabled={!messageText.trim() && selectedImages.length === 0 || loadingSend}
-                className={`p-2.5 sm:p-3 rounded-full transition-all hover:scale-105 shrink-0 ${messageText.trim() || selectedImages.length > 0
-                  ? "bg-blue-500 text-white hover:bg-blue-600 shadow-lg shadow-blue-500/30"
-                  : "bg-gray-200 dark:bg-zinc-800 text-gray-400 cursor-not-allowed"
-                  }`}
-              >
-                {renderSendButton()}
-              </button>
-            </div>
+            {isBlocked ? (
+  <div className="flex items-center justify-center py-4">
+    <div className="flex flex-col items-center gap-2 text-center px-4">
+      <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+        <svg
+          className="w-6 h-6 text-red-600 dark:text-red-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
+          />
+        </svg>
+      </div>
+      <div>
+        <p className="text-sm font-semibold text-gray-900 dark:text-white">
+          Cuộc trò chuyện đã bị chặn
+        </p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          Bạn không thể gửi tin nhắn trong cuộc trò chuyện này
+        </p>
+      </div>
+    </div>
+  </div>
+) : (
+  <div className="flex items-end gap-2">
+    <input
+      type="file"
+      ref={fileInputRef}
+      className="hidden"
+      accept="image/*"
+      multiple
+      onChange={handleImageSelect}
+    />
+    <button
+      onClick={() => fileInputRef.current?.click()}
+      className="p-2.5 sm:p-3 rounded-full bg-gray-100 dark:bg-zinc-800 text-blue-500 dark:text-blue-400 hover:bg-gray-200 dark:hover:bg-zinc-700 transition-all hover:scale-105 shrink-0"
+    >
+      <Image size={20} />
+    </button>
+    <div className="flex-1 bg-gray-100 dark:bg-zinc-800 rounded-3xl px-4 py-2 flex items-center min-w-0">
+      <textarea
+        ref={inputRef}
+        value={messageText}
+        onChange={(e) => setMessageText(e.target.value)}
+        onKeyDown={handleKeyPress}
+        placeholder="Nhập tin nhắn..."
+        rows={1}
+        className="w-full bg-transparent text-gray-900 dark:text-white focus:outline-none resize-none max-h-32 placeholder-gray-500 dark:placeholder-gray-400 text-sm sm:text-base"
+        style={{ minHeight: "24px" }}
+      />
+    </div>
+    <button
+      onClick={handleSend}
+      disabled={!messageText.trim() && selectedImages.length === 0 || loadingSend}
+      className={`p-2.5 sm:p-3 rounded-full transition-all hover:scale-105 shrink-0 ${
+        messageText.trim() || selectedImages.length > 0
+          ? "bg-blue-500 text-white hover:bg-blue-600 shadow-lg shadow-blue-500/30"
+          : "bg-gray-200 dark:bg-zinc-800 text-gray-400 cursor-not-allowed"
+      }`}
+    >
+      {renderSendButton()}
+    </button>
+  </div>
+)}
           </div>
         </footer>
       </div>

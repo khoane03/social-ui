@@ -90,7 +90,7 @@ export const Post = ({ post, onUpdate, isInModal = false }) => {
               onClick={() => {
                 if (!isInModal) setIsShowPost(true);   // TRONG modal thì không mở nữa
               }}
-              className="text-sm md:text-base mt-1 cursor-pointer"
+              className="text-sm md:text-base mt-1 cursor-pointer whitespace-pre-line"
               tabIndex={0}
               role="button"
               aria-label="Show post details"

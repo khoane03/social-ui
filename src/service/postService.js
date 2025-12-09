@@ -30,7 +30,7 @@ const postService = {
         return response;
     },
     countPostByMonth: async () => {
-        const response = await axiosInstance.put('/post/statistical');
+        const response = await axiosInstance.get('/post/statistical');
         return response;
     },
     countAll: async () => {

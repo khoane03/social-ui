@@ -281,7 +281,7 @@ export const LoginPage = () => {
             >
               <motion.h2
                 variants={itemVariants}
-                className="font-semibold text-2xl text-center py-4 dark:text-white"
+                className="font-semibold text-2xl text-center py-4 text-black"
               >
                 Đăng nhập
               </motion.h2>
@@ -289,28 +289,28 @@ export const LoginPage = () => {
               {/* Username */}
               <motion.div
                 variants={itemVariants}
-                className="flex items-center bg-gray-100 dark:bg-gray-800 px-4 py-3 rounded-2xl w-full border-2 border-transparent focus-within:border-[#7F9FEF] transition-colors"
+                className="flex items-center bg-gray-100  px-4 py-3 rounded-2xl w-full border-2 border-transparent focus-within:border-[#7F9FEF] transition-colors"
               >
                 <input
                   ref={formRef}
                   type="text"
-                  className="flex-1 bg-transparent focus:outline-none px-2 dark:text-white"
+                  className="flex-1 bg-transparent focus:outline-none px-2 text-black"
                   placeholder="Tài khoản"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   onKeyDown={(e) => handleKeyPress(e, handleLogin)}
                 />
-                <User className="text-gray-500 dark:text-gray-400" size={20} />
+                <User className="text-gray-500 " size={20} />
               </motion.div>
 
               {/* Password */}
               <motion.div
                 variants={itemVariants}
-                className="flex items-center bg-gray-100 dark:bg-gray-800 px-4 py-3 rounded-2xl w-full border-2 border-transparent focus-within:border-[#7F9FEF] transition-colors"
+                className="flex items-center bg-gray-100  px-4 py-3 rounded-2xl w-full border-2 border-transparent focus-within:border-[#7F9FEF] transition-colors"
               >
                 <input
                   type={showPassword ? "text" : "password"}
-                  className="flex-1 bg-transparent focus:outline-none px-2 dark:text-white"
+                  className="flex-1 bg-transparent focus:outline-none px-2 text-black"
                   placeholder="Mật khẩu"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -321,7 +321,7 @@ export const LoginPage = () => {
                   whileTap={{ scale: 0.9 }}
                   type="button"
                   onClick={togglePasswordVisibility}
-                  className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                  className="text-gray-500 hover:text-gray-700 transition-colors"
                 >
                   {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
                 </motion.button>
@@ -341,7 +341,7 @@ export const LoginPage = () => {
                 />
                 <label
                   htmlFor="rememberMe"
-                  className="text-sm text-gray-600 dark:text-gray-400 cursor-pointer select-none"
+                  className="text-sm text-gray-600 cursor-pointer select-none"
                 >
                   Nhớ mật khẩu
                 </label>
@@ -375,26 +375,26 @@ export const LoginPage = () => {
             >
               <motion.h2
                 variants={itemVariants}
-                className="font-semibold text-2xl text-center py-4 dark:text-white"
+                className="font-semibold text-2xl text-center py-4 text-black"
               >
                 Xác thực OTP
               </motion.h2>
 
               <motion.div
                 variants={itemVariants}
-                className="flex items-center bg-gray-100 dark:bg-gray-800 px-4 py-3 rounded-2xl w-full border-2 border-transparent focus-within:border-[#7F9FEF] transition-colors"
+                className="flex items-center bg-gray-100  px-4 py-3 rounded-2xl w-full border-2 border-transparent focus-within:border-[#7F9FEF] transition-colors"
               >
                 <input
                   ref={otpRef}
                   type="text"
                   maxLength={6}
-                  className="flex-1 bg-transparent focus:outline-none px-2 text-center text-2xl tracking-widest font-semibold dark:text-white"
+                  className="flex-1 bg-transparent focus:outline-none px-2 text-center text-2xl tracking-widest font-semibold text-black"
                   placeholder="000000"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                   onKeyDown={(e) => handleKeyPress(e, handleVerifyOtp)}
                 />
-                <KeyRound className="text-gray-500 dark:text-gray-400" size={20} />
+                <KeyRound className="text-gray-500 " size={20} />
               </motion.div>
 
               <motion.button
@@ -414,7 +414,7 @@ export const LoginPage = () => {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleBackToLogin}
-                className="w-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold py-3 rounded-2xl hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                className="w-full bg-gray-200  text-gray-700  font-semibold py-3 rounded-2xl hover:bg-gray-300  transition-colors"
               >
                 Quay lại
               </motion.button>

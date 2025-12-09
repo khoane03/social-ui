@@ -98,7 +98,7 @@ export const SignUpPage = () => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="font-semibold text-2xl text-center py-4 dark:text-white"
+          className="font-semibold text-2xl text-center py-4 "
         >
           Đăng ký
         </motion.h2>

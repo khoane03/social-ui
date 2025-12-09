@@ -82,17 +82,17 @@ const RegisterUser = ({ onSubmit, loading }) => {
                 initial={{ opacity: 0, x: -30 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3 }}
-                className="flex items-center bg-gray-200 dark:bg-gray-800 px-3 py-3 rounded-2xl justify-between border-2 border-transparent focus-within:border-[#7F9FEF] transition-colors"
+                className="flex items-center bg-gray-200  px-3 py-3 rounded-2xl justify-between border-2 border-transparent focus-within:border-[#7F9FEF] transition-colors"
             >
                 <input
                     type="text"
-                    className="flex-1 bg-transparent focus:outline-none px-2 placeholder:text-sm dark:text-white"
+                    className="flex-1 bg-transparent focus:outline-none px-2 placeholder:text-sm "
                     placeholder="Nhập họ tên"
                     value={form.fullName}
                     onChange={(e) => handleChange("fullName", e.target.value)}
                     disabled={loading}
                 />
-                <UserRound className="text-gray-500 dark:text-gray-400" size={20} />
+                <UserRound className="text-gray-500 " size={20} />
             </motion.div>
 
             {/* Địa chỉ */}
@@ -100,11 +100,11 @@ const RegisterUser = ({ onSubmit, loading }) => {
                 initial={{ opacity: 0, x: -30 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3, delay: 0.1 }}
-                className="flex items-center bg-gray-200 dark:bg-gray-800 px-3 py-3 rounded-2xl justify-between border-2 border-transparent focus-within:border-[#7F9FEF] transition-colors"
+                className="flex items-center bg-gray-200  px-3 py-3 rounded-2xl justify-between border-2 border-transparent focus-within:border-[#7F9FEF] transition-colors"
             >
                 <input
                     type="text"
-                    className="flex-1 bg-transparent focus:outline-none px-2 placeholder:text-sm dark:text-white"
+                    className="flex-1 bg-transparent focus:outline-none px-2 placeholder:text-sm "
                     placeholder="Nhập địa chỉ"
                     value={form.address}
                     onChange={(e) => handleChange("address", e.target.value)}
@@ -118,8 +118,8 @@ const RegisterUser = ({ onSubmit, loading }) => {
                     disabled={loadingLocation || loading}
                     className={`p-2 rounded-full transition-all duration-300 ${
                         loadingLocation || loading
-                            ? "bg-blue-100 dark:bg-blue-900/30 cursor-wait"
-                            : "hover:bg-blue-100 dark:hover:bg-blue-900/50 active:bg-blue-200 dark:active:bg-blue-900"
+                            ? "bg-blue-100  cursor-wait"
+                            : "hover:bg-blue-100  active:bg-blue-200   "
                     }`}
                 >
                     <MapPin
@@ -127,7 +127,7 @@ const RegisterUser = ({ onSubmit, loading }) => {
                         className={`transition-colors duration-300 ${
                             loadingLocation
                                 ? "animate-pulse text-blue-500"
-                                : "text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
+                                : "text-gray-600  hover:text-blue-600 "
                         }`}
                     />
                 </motion.button>
@@ -140,25 +140,25 @@ const RegisterUser = ({ onSubmit, loading }) => {
                 transition={{ duration: 0.3, delay: 0.2 }}
                 className="flex gap-3"
             >
-                <div className="flex-1 bg-gray-200 dark:bg-gray-800 px-3 py-3 rounded-2xl border-2 border-transparent focus-within:border-[#7F9FEF] transition-colors">
+                <div className="flex-1 bg-gray-200  px-3 py-3 rounded-2xl border-2 border-transparent focus-within:border-[#7F9FEF] transition-colors">
                     <select
                         id="gender"
-                        className="w-full bg-transparent text-sm focus:outline-none dark:text-white cursor-pointer"
+                        className="w-full bg-transparent text-sm focus:outline-none  cursor-pointer"
                         value={form.gender}
                         onChange={(e) => handleChange("gender", e.target.value)}
                         disabled={loading}
                     >
-                        <option value="" className="dark:bg-gray-800">Giới tính</option>
-                        <option value="MALE" className="dark:bg-gray-800">Nam</option>
-                        <option value="FEMALE" className="dark:bg-gray-800">Nữ</option>
-                        <option value="OTHER" className="dark:bg-gray-800">Khác</option>
+                        <option value="" className="">Giới tính</option>
+                        <option value="MALE" className="">Nam</option>
+                        <option value="FEMALE" className="">Nữ</option>
+                        <option value="OTHER" className="">Khác</option>
                     </select>
                 </div>
 
-                <div className="flex-1 bg-gray-200 dark:bg-gray-800 px-3 py-3 rounded-2xl border-2 border-transparent focus-within:border-[#7F9FEF] transition-colors">
+                <div className="flex-1 bg-gray-200  px-3 py-3 rounded-2xl border-2 border-transparent focus-within:border-[#7F9FEF] transition-colors">
                     <input
                         type="date"
-                        className="w-full bg-transparent text-sm focus:outline-none dark:text-white cursor-pointer dark:[color-scheme:dark]"
+                        className="w-full bg-transparent text-sm focus:outline-none  cursor-pointer"
                         value={form.dayOfBirth}
                         onChange={(e) => handleChange("dayOfBirth", e.target.value)}
                         onKeyDown={(e) => {

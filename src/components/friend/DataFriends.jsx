@@ -109,6 +109,7 @@ export const DataFriends = ({ type, title }) => {
         return "Đã hủy kết bạn";
       },
       accept: async () => {
+        console.log("Accepting friend request for friendId:", friend.id);
         await friendService.acceptFriendRequest(friend.id);
         setFriends((prev) => prev.filter((f) => f.id !== friend.id));
         return "Đã chấp nhận";

@@ -31,7 +31,9 @@ const AppRoute = () => {
         <Route element={<PrivateRoute />}>
           <Route path="/" element={<MainLayout />}>
             <Route index element={<HomePage />} />
-            <Route path="friend" element={<FriendPage />} />
+            <Route path="friend" element={<FriendPage />} >
+              <Route path=":tab" element={<FriendPage />} />
+            </Route>
             <Route path="settings" element={<SettingPage />} />
             <Route path="profile" element={<ProfileLayout />}>
               <Route index element={<ProfilePage />} />

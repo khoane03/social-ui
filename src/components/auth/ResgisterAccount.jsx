@@ -79,18 +79,18 @@ export const RegisterAccount = ({ onSubmit, loading }) => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1, duration: 0.3 }}
-                className="flex items-center bg-gray-200 dark:bg-gray-800 px-4 py-3 rounded-2xl border-2 border-transparent focus-within:border-[#7F9FEF] transition-colors"
+                className="flex items-center bg-gray-200 px-4 py-3 rounded-2xl border-2 border-transparent focus-within:border-[#7F9FEF] transition-colors"
             >
                 <input
                     type="text"
-                    className="flex-1 bg-transparent focus:outline-none px-2 dark:text-white"
+                    className="flex-1 bg-transparent focus:outline-none px-2 "
                     placeholder="Nhập Email"
                     value={form.email}
                     onChange={(e) => handleChange("email", e.target.value)}
                     onKeyDown={handleKeyPress}
                     disabled={loading}
                 />
-                <AtSign className="text-gray-500 dark:text-gray-400" size={20} />
+                <AtSign className="text-gray-500 " size={20} />
             </motion.div>
 
             {/* Password */}
@@ -98,11 +98,11 @@ export const RegisterAccount = ({ onSubmit, loading }) => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2, duration: 0.3 }}
-                className="flex items-center bg-gray-200 dark:bg-gray-800 px-4 py-3 rounded-2xl border-2 border-transparent focus-within:border-[#7F9FEF] transition-colors"
+                className="flex items-center bg-gray-200 px-4 py-3 rounded-2xl border-2 border-transparent focus-within:border-[#7F9FEF] transition-colors"
             >
                 <input
                     type={showPassword ? "text" : "password"}
-                    className="flex-1 bg-transparent focus:outline-none px-2 dark:text-white"
+                    className="flex-1 bg-transparent focus:outline-none px-2 "
                     placeholder="Nhập mật khẩu"
                     value={form.password}
                     onChange={(e) => handleChange("password", e.target.value)}
@@ -115,7 +115,7 @@ export const RegisterAccount = ({ onSubmit, loading }) => {
                     type="button"
                     onClick={togglePasswordVisibility}
                     disabled={loading}
-                    className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors disabled:opacity-50"
+                    className="text-gray-500  hover:text-gray-700  transition-colors disabled:opacity-50"
                 >
                     {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
                 </motion.button>
@@ -126,11 +126,11 @@ export const RegisterAccount = ({ onSubmit, loading }) => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3, duration: 0.3 }}
-                className="flex items-center bg-gray-200 dark:bg-gray-800 px-4 py-3 rounded-2xl border-2 border-transparent focus-within:border-[#7F9FEF] transition-colors"
+                className="flex items-center bg-gray-200  px-4 py-3 rounded-2xl border-2 border-transparent focus-within:border-[#7F9FEF] transition-colors"
             >
                 <input
                     type={showPassword ? "text" : "password"}
-                    className="flex-1 bg-transparent focus:outline-none px-2 dark:text-white"
+                    className="flex-1 bg-transparent focus:outline-none px-2 "
                     placeholder="Nhập lại mật khẩu"
                     value={form.confirmPassword}
                     onChange={(e) => handleChange("confirmPassword", e.target.value)}
@@ -143,7 +143,7 @@ export const RegisterAccount = ({ onSubmit, loading }) => {
                     type="button"
                     onClick={togglePasswordVisibility}
                     disabled={loading}
-                    className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors disabled:opacity-50"
+                    className="text-gray-500  hover:text-gray-700  transition-colors disabled:opacity-50"
                 >
                     {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
                 </motion.button>

@@ -2,14 +2,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Users, UserPlus, Ban, Users2, ChevronDown } from "lucide-react";
 
 const options = [
-    { value: "friends", label: "Bạn bè", icon: Users2 },
+    { value: "all", label: "Bạn bè", icon: Users2 },
     { value: "invites", label: "Lời mời kết bạn", icon: UserPlus },
     { value: "suggest", label: "Gợi ý kết bạn", icon: Users },
     { value: "blocked", label: "Danh sách chặn", icon: Ban },
 ];
 
 export const Menu = ({ currentTab }) => {
-    const [tab, setTab] = useState("friends");
+    const [tab, setTab] = useState("all");
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
 

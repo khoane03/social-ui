@@ -6,6 +6,7 @@ import { ConfirmModal } from "../../components/common/ConfirmModal";
 import userService from "../../service/userService";
 import { VerificationDetailModal } from "./VerificationDetailModal";
 import { RejectReasonModal } from "./RejectReasonModal";
+import { formatTime } from "../../service/ultilsService";
 
 
 export const RequestManagerPage = () => {
@@ -144,11 +145,6 @@ export const RequestManagerPage = () => {
     const handleViewDetail = (request) => {
         setSelectedRequest(request);
         setIsDetailModalOpen(true);
-    };
-
-    const formatDate = (dateString) => {
-        if (!dateString) return "N/A";
-        return new Date(dateString).toLocaleDateString("vi-VN");
     };
 
     return (
@@ -328,7 +324,7 @@ export const RequestManagerPage = () => {
 
                                                 {/* Date of Issue */}
                                                 <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                                                    {formatDate(request.dateOfIssue)}
+                                                    {formatTime(request.dateOfIssue)}
                                                 </td>
 
                                                 {/* Status */}
@@ -341,7 +337,7 @@ export const RequestManagerPage = () => {
 
                                                 {/* Created At */}
                                                 <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                                                    {formatDate(request.userProfile?.createAt)}
+                                                    {formatTime(request.userProfile?.createAt)}
                                                 </td>
 
                                                 {/* Actions */}

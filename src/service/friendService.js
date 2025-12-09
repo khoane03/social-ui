@@ -45,6 +45,10 @@ const friendService = {
     unBlockFriend: async (id) => {
         const response = await axiosInstance.post(`/friend/${id}/unblock`);
         return response;
+    },
+    countFriend: async (id) => {
+        const response = await axiosInstance.get(`/friend/count/${id}`);
+        return response;
     }
 };
 

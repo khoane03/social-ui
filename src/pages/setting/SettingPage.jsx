@@ -6,6 +6,8 @@ import { UpdateProfile } from "../../components/profile/UpdateProfile";
 import { SettingModal } from "./SettingModal";
 import { useAuth } from "../../context/AuthContext";
 import { ConfirmModal } from "../../components/common/ConfirmModal";
+import authService from "../../service/authService";
+import { getRefreshToken } from "../../service/storeService";
 
 export const SettingPage = () => {
   const [showModal, setShowModal] = useState(false);
@@ -56,6 +58,17 @@ export const SettingPage = () => {
     visible: { opacity: 1, y: 0 },
   };
 
+  const handleLogout = async () => {
+    try {
+      await authService.logout(getRefreshToken());
+      logout();
+      setIsModalOpen(false);
+    } catch (error) {
+
+    }
+
+  };
+
   return (
     <>
       {showModal && <UpdateProfile onClose={() => setShowModal(false)} />}
@@ -65,7 +78,7 @@ export const SettingPage = () => {
       {<ConfirmModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onConfirm={logout}
+        onConfirm={handleLogout}
         title="Xác nhận đăng xuất"
         message="Bạn có chắc chắn muốn đăng xuất không?"
         confirmText="Đăng xuất"

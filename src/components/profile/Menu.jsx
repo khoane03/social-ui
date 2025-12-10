@@ -6,8 +6,8 @@ export const Menu = () => {
 
   const menuItems = [
     { to: `/profile/${userId}`, icon: <GalleryVerticalEnd /> },
-    { to: `/profile/${userId}/friend`, icon: <Users /> },
-    { to: `/profile/${userId}/images`, icon: <Images /> },
+    // { to: `/profile/${userId}/friend`, icon: <Users /> },
+    // { to: `/profile/${userId}/images`, icon: <Images /> },
     { to: `/profile/${userId}/info`, icon: <FileUser /> },
   ];
 

@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import { useAlerts } from "../../context/AlertContext";
 import friendService from "../../service/friendService";
 import { motion, AnimatePresence } from "framer-motion";
+import authService from "../../service/authService";
+import { getRefreshToken } from "../../service/storeService";
 
 export const Suggestion = () => {
   const { user, logout } = useAuth();
@@ -48,7 +50,7 @@ export const Suggestion = () => {
     try {
       console.log("Sending request to:", friendId);
       await friendService.sendFriendRequest(friendId);
-      setSentRequests(prev => 
+      setSentRequests(prev =>
         prev.includes(friendId) ? prev.filter(id => id !== friendId) : [...prev, friendId]
       );
     } catch (error) {
@@ -65,12 +67,23 @@ export const Suggestion = () => {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await authService.logout(getRefreshToken());
+      logout();
+      setIsModalOpen(false);
+    } catch (error) {
+
+    }
+
+  };
+
   return (
     <>
       <ConfirmModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onConfirm={logout}
+        onConfirm={handleLogout}
         title="Xác nhận đăng xuất"
         message="Bạn có chắc chắn muốn đăng xuất không?"
         confirmText="Đăng xuất"
@@ -90,8 +103,8 @@ export const Suggestion = () => {
             <BadgeCheck className="ml-1 text-green-500 w-3 h-3 md:w-4 md:h-4" />
           )}
         </div>
-        <button 
-          onClick={() => setIsModalOpen(true)} 
+        <button
+          onClick={() => setIsModalOpen(true)}
           className="hover:scale-105 hover:text-red-400 text-sm transition-all"
         >
           <LogOut />
@@ -125,8 +138,8 @@ export const Suggestion = () => {
                       className="w-10 h-10 rounded-full ring-2 ring-pink-500"
                       alt={s.fullName}
                     />
-                    <Link 
-                      to={`/profile/${s.friendId}`} 
+                    <Link
+                      to={`/profile/${s.friendId}`}
                       className="text-sm font-semibold dark:text-white text-white-theme hover:text-pink-500 transition-colors"
                     >
                       {s.fullName}
@@ -135,7 +148,7 @@ export const Suggestion = () => {
                       <BadgeCheck className="ml-1 text-green-500 w-3 h-3 md:w-4 md:h-4" />
                     )}
                   </div>
-                  <button 
+                  <button
                     onClick={() => handleRequest(s.friendId)}
                     className="text-sm hover:scale-105 hover:text-pink-500 transition-all flex items-center gap-1"
                   >

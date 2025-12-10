@@ -24,6 +24,10 @@ const authService = {
     forgetPass: async (email) => {
         const response = await axiosInstance.post('/auth/forgot', { email });
         return response;
+    },
+    logout: async (token) => {
+        const response = await axiosInstance.post('/auth/logout', { token });
+        return response;
     }
 };
 export default authService;

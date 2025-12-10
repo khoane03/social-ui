@@ -4,14 +4,14 @@ import { BadgeCheck, Loader2 } from "lucide-react";
 import friendService from "../../service/friendService";
 import { useAuth } from "../../context/AuthContext";
 import { useAlerts } from "../../context/AlertContext";
-import { Link } from "react-router";
+import { Link, useParams } from "react-router";
 import useInfiniteScroll from "../../hooks/useInfiniteScroll";
 import { ConfirmModal } from "../common/ConfirmModal";
 
 const AllFriend = () => {
     const { user } = useAuth();
     const { addAlert } = useAlerts();
-
+    const { id } = useParams();
     const [friends, setFriends] = useState([]);
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(1);
@@ -26,6 +26,10 @@ const AllFriend = () => {
     const hasFetchedRef = useRef(false);
     const isFetchingRef = useRef(false);
     const hasNextPage = page <= totalPages;
+    
+    // Determine which user ID to use
+    const targetUserId = id || user?.id;
+    const isOwnProfile = !id || id === user?.id;
 
     const openModal = (friend, action) => {
         const configs = {
@@ -63,17 +67,18 @@ const AllFriend = () => {
 
         try {
             setLoading(true);
+            const friendId = friend.friendId || friend.id;
 
             if (action === "unfriend") {
-                await friendService.unFriend(friend.id);
-                setFriends(prev => prev.filter(f => (f.friendId || f.id) !== (friend.friendId || friend.id)));
+                await friendService.unFriend(friendId);
+                setFriends(prev => prev.filter(f => (f.friendId || f.id) !== friendId));
                 addAlert({
                     type: "success",
                     message: `Đã hủy kết bạn với ${friend.fullName}`
                 });
             } else if (action === "block") {
-                await friendService.blockFriend(friend.friendId);
-                setFriends(prev => prev.filter(f => (f.friendId || f.id) !== (friend.friendId || friend.id)));
+                await friendService.blockFriend(friendId);
+                setFriends(prev => prev.filter(f => (f.friendId || f.id) !== friendId));
                 addAlert({
                     type: "success",
                     message: `Đã chặn ${friend.fullName}`
@@ -95,13 +100,14 @@ const AllFriend = () => {
     };
 
     const fetchFriends = async () => {
-        if (isFetchingRef.current || !user || page > totalPages) return;
+        if (isFetchingRef.current || !targetUserId || page > totalPages) return;
 
         isFetchingRef.current = true;
         setLoading(true);
 
         try {
-            const res = await friendService.getFriendsList(page, 10, user.id);
+            console.log(`Fetching friends for user ${targetUserId}`);
+            const res = await friendService.getFriendsList(page, 10, targetUserId);
 
             if (res.data && res.data.length > 0) {
                 setFriends(prev => {
@@ -137,11 +143,21 @@ const AllFriend = () => {
     });
 
     useEffect(() => {
-        if (user && !hasFetchedRef.current) {
+        // Reset state when userId changes
+        if (targetUserId) {
+            setFriends([]);
+            setPage(1);
+            setTotalPages(1);
+            hasFetchedRef.current = false;
+        }
+    }, [targetUserId]);
+
+    useEffect(() => {
+        if (targetUserId && !hasFetchedRef.current) {
             hasFetchedRef.current = true;
             fetchFriends();
         }
-    }, [user]);
+    }, [targetUserId]);
 
     return (
         <>
@@ -152,6 +168,7 @@ const AllFriend = () => {
                 title={modalConfig.title}
                 message={modalConfig.message}
                 confirmText={modalConfig.action === "unfriend" ? "Hủy kết bạn" : "Chặn"}
+                loading={loading}
             />
 
             <div className="flex flex-col h-full space-y-4 bg-white dark:bg-gray-900 rounded-xl p-4 shadow">
@@ -160,7 +177,7 @@ const AllFriend = () => {
                     animate={{ opacity: 1, y: 0 }}
                     className="text-lg font-semibold dark:text-white"
                 >
-                    Tất cả bạn bè ({friends.length})
+                    {isOwnProfile ? "Tất cả bạn bè" : "Bạn bè"} ({friends.length})
                 </motion.h3>
 
                 {loading && friends.length === 0 ? (
@@ -197,26 +214,30 @@ const AllFriend = () => {
                                                 </Link>
                                                 {f.verified && <BadgeCheck className="text-green-500 w-4 h-4" />}
                                             </div>
-                                            <div className="flex gap-2">
-                                                <motion.button
-                                                    whileHover={{ scale: 1.05 }}
-                                                    whileTap={{ scale: 0.95 }}
-                                                    disabled={loading || modalConfig.isOpen}
-                                                    onClick={() => openModal(f, "unfriend")}
-                                                    className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
-                                                >
-                                                    Hủy kết bạn
-                                                </motion.button>
-                                                <motion.button
-                                                    whileHover={{ scale: 1.05 }}
-                                                    whileTap={{ scale: 0.95 }}
-                                                    disabled={loading || modalConfig.isOpen}
-                                                    onClick={() => openModal(f, "block")}
-                                                    className="px-3 py-1.5 bg-gray-700 hover:bg-gray-800 dark:bg-gray-600 dark:hover:bg-gray-500 text-white text-sm rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
-                                                >
-                                                    Chặn
-                                                </motion.button>
-                                            </div>
+                                            
+                                            {/* Only show action buttons on own profile */}
+                                            {isOwnProfile && (
+                                                <div className="flex gap-2">
+                                                    <motion.button
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                        disabled={loading || modalConfig.isOpen}
+                                                        onClick={() => openModal(f, "unfriend")}
+                                                        className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
+                                                    >
+                                                        Hủy kết bạn
+                                                    </motion.button>
+                                                    <motion.button
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                        disabled={loading || modalConfig.isOpen}
+                                                        onClick={() => openModal(f, "block")}
+                                                        className="px-3 py-1.5 bg-gray-700 hover:bg-gray-800 dark:bg-gray-600 dark:hover:bg-gray-500 text-white text-sm rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
+                                                    >
+                                                        Chặn
+                                                    </motion.button>
+                                                </div>
+                                            )}
                                         </motion.div>
                                     );
                                 })}

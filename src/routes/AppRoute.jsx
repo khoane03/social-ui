@@ -23,6 +23,7 @@ import ModalUpdateProfile from "../components/auth/ModalUpdateProfile";
 import { RequestManagerPage } from "../pages/dashboard/RequestManagerPage";
 import { PostPage } from "../pages/home/Post";
 import ForgotPassword from "../pages/auth/ForgotPassword";
+import AllFriend from "../components/friend/AllFriend";
 
 const AppRoute = () => {
   return (
@@ -38,7 +39,7 @@ const AppRoute = () => {
             <Route path="profile" element={<ProfileLayout />}>
               <Route index element={<ProfilePage />} />
               <Route path=":id" element={<ProfilePage />} />
-              <Route path=":id/friend" element={<FriendPage />} />
+              <Route path=":id/friend" element={<AllFriend />} />
               <Route path=":id/images" element={<Image />} />
               <Route path=":id/info" element={<Info />} />
             </Route>

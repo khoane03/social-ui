@@ -24,7 +24,7 @@ export const StompProvider = ({ children }) => {
 
     const { user } = useAuth();
     const { addAlert } = useAlerts();
-const reconnectWithNewToken = useCallback(async () => {
+    const reconnectWithNewToken = useCallback(async () => {
         if (isReconnectingRef.current) return;
         isReconnectingRef.current = true;
 
@@ -36,10 +36,10 @@ const reconnectWithNewToken = useCallback(async () => {
             }
             console.log('🔄 Refreshing access token...');
             const res = await axios.post("http://localhost:8080/auth/refresh", { token: refresh });
-            console.log('✅ Token refreshed successfully');
 
             const newAccess = res.data.data.accessToken;
             setAccessToken(newAccess);
+            console.log('✅ Token refreshed successfully, ', newAccess);
 
             // Disconnect completely before reconnecting
             if (chatClientRef.current) {
@@ -68,7 +68,7 @@ const reconnectWithNewToken = useCallback(async () => {
 
             console.log('🔌 Reconnecting with new token...');
             connectChat(newAccess);
-
+            console.log('🔌 connecting chat...');
         } catch (error) {
             console.error('❌ Token refresh failed:', error);
             addAlert({

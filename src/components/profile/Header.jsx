@@ -25,6 +25,7 @@ export const Header = () => {
   const [imageToView, setImageToView] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
   const [postCount, setPostCount] = useState(0);
+  const [friendCount, setFriendCount] = useState(0);
   const [friendStatus, setFriendStatus] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -34,6 +35,7 @@ export const Header = () => {
     if (user.id === userId) {
       setUserInfo(user);
       fetchCountPosts(userId);
+      fetchCountFriends(userId);
       return;
     }
 
@@ -41,9 +43,9 @@ export const Header = () => {
       try {
         const response = await userService.getUserById(userId);
         const { data } = await friendService.checkFriend(userId);
-        console.log("Friend status data:", data);
         setFriendStatus(data);
         fetchCountPosts(userId);
+        fetchCountFriends(userId);
         setUserInfo(response.data);
       } catch (error) {
         addAlert({
@@ -61,6 +63,13 @@ export const Header = () => {
     try {
       const { data } = await postService.countByAuthor(userId);
       setPostCount(data?.totalPosts || 0);
+    } catch (error) { }
+  };
+
+  const fetchCountFriends = async (userId) => {
+    try {
+      const { data } = await friendService.countFriend(userId);
+      setFriendCount(data?.totalFriends || 0);
     } catch (error) { }
   };
 
@@ -229,7 +238,7 @@ export const Header = () => {
   const Stats = () => (
     <div className="flex items-center justify-center md:justify-start">
       <Stat label="Bài viết" value={postCount} />
-      <Stat label="Bạn bè" value="100+" className="ml-4" />
+      <Stat label="Bạn bè" value={friendCount} className="ml-4" />
     </div>
   );
 

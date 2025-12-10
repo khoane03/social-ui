@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Users, UserPlus, Ban, Users2, ChevronDown } from "lucide-react";
+import { useParams } from "react-router";
 
 const options = [
     { value: "all", label: "Bạn bè", icon: Users2 },
-    { value: "invites", label: "Lời mời kết bạn", icon: UserPlus },
+    { value: "request", label: "Lời mời kết bạn", icon: UserPlus },
     { value: "suggest", label: "Gợi ý kết bạn", icon: Users },
     { value: "blocked", label: "Danh sách chặn", icon: Ban },
 ];
 
 export const Menu = ({ currentTab }) => {
-    const [tab, setTab] = useState("all");
+    const params = useParams();
+    const [tab, setTab] = useState(params.tab || "all");
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
 
@@ -31,7 +33,7 @@ export const Menu = ({ currentTab }) => {
                 setIsOpen(false);
             }
         };
-        
+
         if (isOpen) {
             document.addEventListener("mousedown", handleClickOutside);
             return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -43,7 +45,7 @@ export const Menu = ({ currentTab }) => {
             <span className="font-medium text-white-theme dark:text-b-wt">
                 {selectedOption.label}
             </span>
-            
+
             <div className="relative">
                 <button
                     onClick={toggleDropdown}
@@ -52,9 +54,8 @@ export const Menu = ({ currentTab }) => {
                 >
                     <ChevronDown
                         size={16}
-                        className={`text-white-theme dark:text-b-wt transition-transform duration-300 ${
-                            isOpen ? 'rotate-180' : ''
-                        }`}
+                        className={`text-white-theme dark:text-b-wt transition-transform duration-300 ${isOpen ? 'rotate-180' : ''
+                            }`}
                     />
                 </button>
 
@@ -63,14 +64,13 @@ export const Menu = ({ currentTab }) => {
                         {options.map((option) => {
                             const Icon = option.icon;
                             const isSelected = tab === option.value;
-                            
+
                             return (
                                 <button
                                     key={option.value}
                                     onClick={() => handleTabChange(option.value)}
-                                    className={`w-full flex items-center px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition ${
-                                        isSelected ? "bg-gray-100 dark:bg-gray-700" : ""
-                                    }`}
+                                    className={`w-full flex items-center px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition ${isSelected ? "bg-gray-100 dark:bg-gray-700" : ""
+                                        }`}
                                 >
                                     <Icon className="w-4 h-4 mr-2 text-gray-700 dark:text-gray-200" />
                                     <span className="text-sm text-gray-800 dark:text-gray-100">

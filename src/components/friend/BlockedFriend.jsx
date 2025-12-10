@@ -8,14 +8,9 @@ import { Link } from "react-router";
 import useInfiniteScroll from "../../hooks/useInfiniteScroll";
 import { ConfirmModal } from "../common/ConfirmModal";
 
-const AllFriend = () => {
+const BlockedFriend = () => {
     const { user } = useAuth();
     const { addAlert } = useAlerts();
-
-    const [friends, setFriends] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [page, setPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
     const [modalConfig, setModalConfig] = useState({
         isOpen: false,
         friend: null,
@@ -23,19 +18,21 @@ const AllFriend = () => {
         title: "",
         message: ""
     });
+    const [friends, setFriends] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+
     const hasFetchedRef = useRef(false);
     const isFetchingRef = useRef(false);
     const hasNextPage = page <= totalPages;
 
+
     const openModal = (friend, action) => {
         const configs = {
-            unfriend: {
-                title: "Xác nhận hủy kết bạn",
-                message: `Bạn có chắc chắn muốn hủy kết bạn với ${friend.fullName}? Bạn sẽ cần gửi lời mời kết bạn lại nếu muốn kết nối.`
-            },
-            block: {
-                title: "Xác nhận chặn người dùng",
-                message: `Bạn có chắc chắn muốn chặn ${friend.fullName}? Người này sẽ không thể xem trang cá nhân, gửi tin nhắn hoặc tương tác với bạn.`
+            unblock: {
+                title: "Xác nhận bỏ chặn người dùng",
+                message: `Bạn có chắc chắn muốn bỏ chặn ${friend.fullName}? Người này sẽ có thể xem trang cá nhân, gửi tin nhắn hoặc tương tác với bạn.`
             }
         };
 
@@ -64,19 +61,12 @@ const AllFriend = () => {
         try {
             setLoading(true);
 
-            if (action === "unfriend") {
-                await friendService.unFriend(friend.id);
+            if (action === "unblock") {
+                await friendService.unBlockFriend(friend.id);
                 setFriends(prev => prev.filter(f => (f.friendId || f.id) !== (friend.friendId || friend.id)));
                 addAlert({
                     type: "success",
-                    message: `Đã hủy kết bạn với ${friend.fullName}`
-                });
-            } else if (action === "block") {
-                await friendService.blockFriend(friend.friendId);
-                setFriends(prev => prev.filter(f => (f.friendId || f.id) !== (friend.friendId || friend.id)));
-                addAlert({
-                    type: "success",
-                    message: `Đã chặn ${friend.fullName}`
+                    message: `Đã bỏ chặn ${friend.fullName}`
                 });
             }
 
@@ -101,9 +91,9 @@ const AllFriend = () => {
         setLoading(true);
 
         try {
-            const res = await friendService.getFriendsList(page, 10, user.id);
-
+            const res = await friendService.getFriendBlockList(page, 10, user.id)
             if (res.data && res.data.length > 0) {
+                // Lọc duplicate bằng Set dựa vào id
                 setFriends(prev => {
                     const existingIds = new Set(prev.map(f => f.friendId || f.id));
                     const newFriends = res.data.filter(f => !existingIds.has(f.friendId || f.id));
@@ -129,6 +119,7 @@ const AllFriend = () => {
         }
     };
 
+    // Infinite scroll
     useInfiniteScroll({
         hasNextPage,
         isLoading: loading,
@@ -136,6 +127,7 @@ const AllFriend = () => {
         onLoadMore: fetchFriends
     });
 
+    // Auto load page đầu tiên khi vào
     useEffect(() => {
         if (user && !hasFetchedRef.current) {
             hasFetchedRef.current = true;
@@ -151,16 +143,16 @@ const AllFriend = () => {
                 onConfirm={handleConfirm}
                 title={modalConfig.title}
                 message={modalConfig.message}
-                confirmText={modalConfig.action === "unfriend" ? "Hủy kết bạn" : "Chặn"}
+                confirmText={modalConfig.action === "unblock" ? "Bỏ chặn" : "Chặn"}
             />
 
             <div className="flex flex-col h-full space-y-4 bg-white dark:bg-gray-900 rounded-xl p-4 shadow">
                 <motion.h3
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-lg font-semibold dark:text-white"
+                    className="text-lg font-semibold"
                 >
-                    Tất cả bạn bè ({friends.length})
+                    Bạn bè bị chặn ({friends.length})
                 </motion.h3>
 
                 {loading && friends.length === 0 ? (
@@ -187,36 +179,25 @@ const AllFriend = () => {
                                                 <img
                                                     src={f.avatarUrl || "/default.png"}
                                                     alt={f.fullName}
-                                                    className="w-10 h-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
+                                                    className="w-10 h-10 rounded-full object-cover"
                                                 />
                                                 <Link
                                                     to={`/profile/${friendId}`}
-                                                    className="text-sm font-semibold hover:text-pink-500 dark:text-white transition-colors"
+                                                    className="text-sm font-semibold hover:text-pink-500 transition-colors"
                                                 >
                                                     {f.fullName}
                                                 </Link>
                                                 {f.verified && <BadgeCheck className="text-green-500 w-4 h-4" />}
                                             </div>
-                                            <div className="flex gap-2">
-                                                <motion.button
-                                                    whileHover={{ scale: 1.05 }}
-                                                    whileTap={{ scale: 0.95 }}
-                                                    disabled={loading || modalConfig.isOpen}
-                                                    onClick={() => openModal(f, "unfriend")}
-                                                    className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
-                                                >
-                                                    Hủy kết bạn
-                                                </motion.button>
-                                                <motion.button
-                                                    whileHover={{ scale: 1.05 }}
-                                                    whileTap={{ scale: 0.95 }}
-                                                    disabled={loading || modalConfig.isOpen}
-                                                    onClick={() => openModal(f, "block")}
-                                                    className="px-3 py-1.5 bg-gray-700 hover:bg-gray-800 dark:bg-gray-600 dark:hover:bg-gray-500 text-white text-sm rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
-                                                >
-                                                    Chặn
-                                                </motion.button>
-                                            </div>
+                                            <motion.button
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                disabled={loading}
+                                                onClick={() => openModal(f, "unblock")}
+                                                className={`px-3 py-1.5 bg-yellow-500 text-white rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 transition-opacity`}
+                                            >
+                                                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Bỏ chặn"}
+                                            </motion.button>
                                         </motion.div>
                                     );
                                 })}
@@ -230,13 +211,13 @@ const AllFriend = () => {
                         )}
 
                         {!hasNextPage && friends.length > 0 && (
-                            <p className="text-center text-gray-500 dark:text-gray-400 text-sm py-3">
+                            <p className="text-center text-gray-500 text-sm py-3">
                                 Đã hiển thị tất cả bạn bè
                             </p>
                         )}
 
                         {!loading && friends.length === 0 && (
-                            <p className="text-center text-gray-500 dark:text-gray-400 text-sm py-3">
+                            <p className="text-center text-gray-500 text-sm py-3">
                                 Chưa có bạn bè nào
                             </p>
                         )}
@@ -247,4 +228,4 @@ const AllFriend = () => {
     );
 };
 
-export default AllFriend;
+export default BlockedFriend;

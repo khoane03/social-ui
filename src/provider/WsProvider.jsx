@@ -34,7 +34,6 @@ const reconnectWithNewToken = useCallback(async () => {
                 console.error('❌ No refresh token available');
                 return;
             }
-å
             console.log('🔄 Refreshing access token...');
             const res = await axios.post("http://localhost:8080/auth/refresh", { token: refresh });
             console.log('✅ Token refreshed successfully');

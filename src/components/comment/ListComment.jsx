@@ -22,6 +22,7 @@ export const ListComment = ({ postId }) => {
   const [expandedComments, setExpandedComments] = useState({});
   const [loadingReplies, setLoadingReplies] = useState({});
   const [repliesData, setRepliesData] = useState({});
+  const [deletingCommentId, setDeletingCommentId] = useState(null);
   const fileInputRef = useRef(null);
   const replyInputRef = useRef(null);
 
@@ -53,13 +54,29 @@ export const ListComment = ({ postId }) => {
   }, [replyingTo, replyContent]);
 
   const handleDeleteComment = async (commentId) => {
+    if (deletingCommentId) return;
+
     try {
+      setDeletingCommentId(commentId);
       await actionService.deleteComment(commentId);
+      
       addAlert({
         type: "success",
         message: "Xóa bình luận thành công!",
       });
-      setComments(comments.filter((c) => c.id !== commentId));
+      
+      // Remove from main comments or replies
+      setComments(prev => prev.filter((c) => c.id !== commentId));
+      
+      // Also remove from replies if it's a reply
+      setRepliesData(prev => {
+        const updated = { ...prev };
+        Object.keys(updated).forEach(key => {
+          updated[key] = updated[key].filter(r => r.id !== commentId);
+        });
+        return updated;
+      });
+      
       setOpenMenuId(null);
     } catch (error) {
       addAlert({
@@ -69,6 +86,8 @@ export const ListComment = ({ postId }) => {
           error?.message ||
           "Lỗi hệ thống, vui lòng thử lại!",
       });
+    } finally {
+      setDeletingCommentId(null);
     }
   };
 
@@ -264,7 +283,8 @@ export const ListComment = ({ postId }) => {
                 onClick={() =>
                   setOpenMenuId(openMenuId === comment.id ? null : comment.id)
                 }
-                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                disabled={deletingCommentId === comment.id}
+                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label="Tùy chọn"
               >
                 <MoreHorizontal className="w-4 h-4 text-gray-500 dark:text-gray-400" />
@@ -280,10 +300,20 @@ export const ListComment = ({ postId }) => {
                   >
                     <button
                       onClick={() => handleDeleteComment(comment.id)}
-                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors rounded-b-lg"
+                      disabled={deletingCommentId === comment.id}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors rounded-b-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <Trash2 className="w-4 h-4" />
-                      Xóa
+                      {deletingCommentId === comment.id ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Đang xóa...
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 className="w-4 h-4" />
+                          Xóa
+                        </>
+                      )}
                     </button>
                   </motion.div>
                 )}
@@ -333,7 +363,8 @@ export const ListComment = ({ postId }) => {
         <div className="flex items-center gap-4 mt-2">
           <button
             onClick={() => handleReply(comment.id, comment?.commentator?.fullName)}
-            className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors font-medium"
+            disabled={deletingCommentId === comment.id}
+            className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Reply className="w-3.5 h-3.5" />
             Trả lời
@@ -344,7 +375,7 @@ export const ListComment = ({ postId }) => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => toggleReplies(comment.id)}
-              disabled={loadingReplies[comment.id]}
+              disabled={loadingReplies[comment.id] || deletingCommentId === comment.id}
               className="flex items-center gap-1 text-xs text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors font-medium disabled:opacity-50"
             >
               {loadingReplies[comment.id] ? (
@@ -367,7 +398,6 @@ export const ListComment = ({ postId }) => {
           )}
         </div>
 
-        {/* Reply Form */}
         {/* Reply Form */}
         <AnimatePresence>
           {replyingTo?.id === comment.id && (
@@ -480,6 +510,7 @@ export const ListComment = ({ postId }) => {
             </motion.div>
           )}
         </AnimatePresence>
+
         {/* Nested Replies */}
         <AnimatePresence>
           {expandedComments[comment.id] && repliesData[comment.id] && (

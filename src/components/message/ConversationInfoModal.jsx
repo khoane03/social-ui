@@ -1,9 +1,11 @@
-import { X, Users, Plus, BadgeCheck, Edit2, Check, Camera, LogOut, ShieldPlus } from "lucide-react";
+import { X, Users, Plus, BadgeCheck, Edit2, Check, Camera, LogOut, ShieldPlus, Search, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAlerts } from "../../context/AlertContext";
 import { useAuth } from "../../context/AuthContext";
 import conversationService from "../../service/conversationService";
+import friendService from "../../service/friendService";
+import userService from "../../service/userService";
 import { ConfirmModal } from "../common/ConfirmModal";
 import { useNavigate, useParams } from "react-router";
 
@@ -15,6 +17,14 @@ export const ConversationInfoModal = ({ isOpen, onClose, conversation }) => {
     const [confirmData, setConfirmData] = useState(null);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
+    
+    // Add member states
+    const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [searchResults, setSearchResults] = useState([]);
+    const [friendsList, setFriendsList] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [selectedUsers, setSelectedUsers] = useState([]);
 
     const { user } = useAuth();
     const { addAlert } = useAlerts();
@@ -39,6 +49,90 @@ export const ConversationInfoModal = ({ isOpen, onClose, conversation }) => {
             }
         })();
     }, [conversation?.id, addAlert]);
+
+    // Load friends list when opening add member modal
+    useEffect(() => {
+        if (showAddMemberModal) {
+            loadFriendsList();
+        }
+    }, [showAddMemberModal]);
+
+    // Search users
+    useEffect(() => {
+        const searchUsers = async () => {
+            if (!searchQuery.trim()) {
+                setSearchResults([]);
+                return;
+            }
+
+            setIsSearching(true);
+            try {
+                const { data } = await userService.searchUser(searchQuery.trim());
+                // Filter out users already in the group
+                const filtered = data.filter(u => !members.some(m => m.id === u.id));
+                setSearchResults(filtered);
+            } catch (error) {
+                console.error("Search error:", error);
+                setSearchResults([]);
+            } finally {
+                setIsSearching(false);
+            }
+        };
+
+        const debounceTimer = setTimeout(searchUsers, 300);
+        return () => clearTimeout(debounceTimer);
+    }, [searchQuery, members]);
+
+    const loadFriendsList = async () => {
+        try {
+            const { data } = await friendService.getFriendsList(1, 50, user.id);
+            // Filter out users already in the group
+            const filtered = data.filter(f => !members.some(m => m.id === f.id));
+            setFriendsList(filtered);
+        } catch (error) {
+            addAlert({ type: "error", message: "Không thể tải danh sách bạn bè." });
+        }
+    };
+
+    const toggleSelectUser = (user) => {
+        setSelectedUsers(prev => {
+            const exists = prev.find(u => u.id === user.id);
+            if (exists) {
+                return prev.filter(u => u.id !== user.id);
+            }
+            return [...prev, user];
+        });
+    };
+
+    const handleAddMembers = async () => {
+        if (selectedUsers.length === 0) {
+            addAlert({ type: "warning", message: "Vui lòng chọn ít nhất một người." });
+            return;
+        }
+
+        setIsProcessing(true);
+        try {
+            const formData = new FormData();
+            formData.append("conversationId", conversation.id);
+            formData.append("userIds", selectedUsers.map(u => u.id).join(","));
+
+            await conversationService.addMembersToGroup(formData);
+            
+            addAlert({ type: "success", message: "Đã thêm thành viên vào nhóm." });
+            setMembers(prev => [...prev, ...selectedUsers]);
+            setShowAddMemberModal(false);
+            setSelectedUsers([]);
+            setSearchQuery("");
+            setSearchResults([]);
+        } catch (error) {
+            addAlert({
+                type: "error",
+                message: error?.response?.data?.message || "Không thể thêm thành viên."
+            });
+        } finally {
+            setIsProcessing(false);
+        }
+    };
 
     const openConfirm = (action, payload) => {
         setConfirmData({ action, payload });
@@ -139,6 +233,8 @@ export const ConversationInfoModal = ({ isOpen, onClose, conversation }) => {
         </span>
     );
 
+    const displayUsers = searchQuery.trim() ? searchResults : friendsList;
+
     return (
         <>
             <ConfirmModal
@@ -149,6 +245,134 @@ export const ConversationInfoModal = ({ isOpen, onClose, conversation }) => {
                 title="Xác nhận thao tác"
                 message="Bạn có chắc muốn thực hiện hành động này?"
             />
+
+            {/* Add Member Modal */}
+            <AnimatePresence>
+                {showAddMemberModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
+                        onClick={() => !isProcessing && setShowAddMemberModal(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-white dark:bg-zinc-900 rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden shadow-2xl"
+                        >
+                            {/* Header */}
+                            <div className="px-6 py-4 border-b border-gray-200 dark:border-zinc-800 flex items-center justify-between">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Thêm thành viên</h3>
+                                <button
+                                    onClick={() => !isProcessing && setShowAddMemberModal(false)}
+                                    className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-800"
+                                >
+                                    <X size={20} className="text-gray-600 dark:text-gray-300" />
+                                </button>
+                            </div>
+
+                            {/* Search */}
+                            <div className="px-6 py-4 border-b border-gray-200 dark:border-zinc-800">
+                                <div className="relative">
+                                    <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        placeholder="Tìm kiếm người dùng..."
+                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                    />
+                                    {isSearching && (
+                                        <Loader2 size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 animate-spin" />
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* User List */}
+                            <div className="overflow-y-auto max-h-[400px] px-6 py-4">
+                                {displayUsers.length === 0 ? (
+                                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                                        {searchQuery.trim() ? "Không tìm thấy người dùng" : "Không có bạn bè"}
+                                    </div>
+                                ) : (
+                                    <ul className="space-y-2">
+                                        {displayUsers.map((person) => {
+                                            const isSelected = selectedUsers.some(u => u.id === person.id);
+                                            return (
+                                                <motion.li
+                                                    key={person.id}
+                                                    whileHover={{ scale: 1.02 }}
+                                                    whileTap={{ scale: 0.98 }}
+                                                    onClick={() => toggleSelectUser(person)}
+                                                    className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-colors ${
+                                                        isSelected 
+                                                            ? "bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-500" 
+                                                            : "hover:bg-gray-50 dark:hover:bg-zinc-800 border-2 border-transparent"
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <img
+                                                            src={person.avatarUrl || "/default.png"}
+                                                            alt={person.fullName}
+                                                            className="w-10 h-10 rounded-full object-cover"
+                                                        />
+                                                        <div>
+                                                            <p className="font-medium text-gray-900 dark:text-white flex items-center gap-1">
+                                                                {person.fullName}
+                                                                {person.isVerified && (
+                                                                    <BadgeCheck size={14} className="text-blue-500" />
+                                                                )}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                                        isSelected 
+                                                            ? "bg-blue-500 border-blue-500" 
+                                                            : "border-gray-300 dark:border-zinc-600"
+                                                    }`}>
+                                                        {isSelected && <Check size={14} className="text-white" />}
+                                                    </div>
+                                                </motion.li>
+                                            );
+                                        })}
+                                    </ul>
+                                )}
+                            </div>
+
+                            {/* Footer */}
+                            <div className="px-6 py-4 border-t border-gray-200 dark:border-zinc-800">
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={handleAddMembers}
+                                    disabled={selectedUsers.length === 0 || isProcessing}
+                                    className={`w-full py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
+                                        selectedUsers.length === 0 || isProcessing
+                                            ? "bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed"
+                                            : "bg-blue-500 hover:bg-blue-600 text-white"
+                                    }`}
+                                >
+                                    {isProcessing ? (
+                                        <>
+                                            <Loader2 size={18} className="animate-spin" />
+                                            Đang thêm...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Plus size={18} />
+                                            Thêm {selectedUsers.length > 0 ? `(${selectedUsers.length})` : ""}
+                                        </>
+                                    )}
+                                </motion.button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
@@ -265,7 +489,7 @@ export const ConversationInfoModal = ({ isOpen, onClose, conversation }) => {
                                             <motion.button
                                                 whileHover={{ scale: 1.05 }}
                                                 whileTap={{ scale: 0.95 }}
-                                                onClick={() => console.log('Thêm thành viên')}
+                                                onClick={() => setShowAddMemberModal(true)}
                                                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
                                             >
                                                 <Plus size={16} />

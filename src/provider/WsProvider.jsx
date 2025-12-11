@@ -24,61 +24,7 @@ export const StompProvider = ({ children }) => {
 
     const { user } = useAuth();
     const { addAlert } = useAlerts();
-    const reconnectWithNewToken = useCallback(async () => {
-        if (isReconnectingRef.current) return;
-        isReconnectingRef.current = true;
 
-        try {
-            const refresh = getRefreshToken();
-            if (!refresh) {
-                console.error('❌ No refresh token available');
-                return;
-            }
-            console.log('🔄 Refreshing access token...');
-            const res = await axios.post("http://localhost:8080/auth/refresh", { token: refresh });
-
-            const newAccess = res.data.data.accessToken;
-            setAccessToken(newAccess);
-            console.log('✅ Token refreshed successfully, ', newAccess);
-
-            // Disconnect completely before reconnecting
-            if (chatClientRef.current) {
-                console.log('🔌 Deactivating old chat connection...');
-                try {
-                    // Unsubscribe first
-                    if (chatSubscriptionRef.current) {
-                        chatSubscriptionRef.current.unsubscribe();
-                        chatSubscriptionRef.current = null;
-                    }
-
-                    // Then deactivate
-                    await chatClientRef.current.deactivate();
-                    chatClientRef.current = null;
-                    setChatConnected(false);
-                    console.log('✅ Old connection closed');
-                } catch (e) {
-                    console.warn('⚠️ Error during deactivation:', e);
-                    chatClientRef.current = null;
-                    setChatConnected(false);
-                }
-            }
-
-            // Wait a bit before reconnecting
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            console.log('🔌 Reconnecting with new token...');
-            connectChat(newAccess);
-            console.log('🔌 connecting chat...');
-        } catch (error) {
-            console.error('❌ Token refresh failed:', error);
-            addAlert({
-                type: "error",
-                message: "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.",
-            });
-        } finally {
-            isReconnectingRef.current = false;
-        }
-    }, []);
     // ===== WS CHAT =====
     const connectChat = useCallback((token) => {
         if (!user?.id) {
@@ -148,8 +94,63 @@ export const StompProvider = ({ children }) => {
 
         client.activate();
         chatClientRef.current = client;
-    }, [user?.id, reconnectWithNewToken]);
+    }, [user?.id]); // Removed reconnectWithNewToken from dependencies
 
+    const reconnectWithNewToken = useCallback(async () => {
+        if (isReconnectingRef.current) return;
+        isReconnectingRef.current = true;
+
+        try {
+            const refresh = getRefreshToken();
+            if (!refresh) {
+                console.error('❌ No refresh token available');
+                return;
+            }
+            console.log('🔄 Refreshing access token...');
+            const res = await axios.post("http://localhost:8080/auth/refresh", { token: refresh });
+
+            const newAccess = res.data.data.accessToken;
+            setAccessToken(newAccess);
+            console.log('✅ Token refreshed successfully');
+
+            // Disconnect completely before reconnecting
+            if (chatClientRef.current) {
+                console.log('🔌 Deactivating old chat connection...');
+                try {
+                    // Unsubscribe first
+                    if (chatSubscriptionRef.current) {
+                        chatSubscriptionRef.current.unsubscribe();
+                        chatSubscriptionRef.current = null;
+                    }
+
+                    // Then deactivate
+                    await chatClientRef.current.deactivate();
+                    chatClientRef.current = null;
+                    setChatConnected(false);
+                    console.log('✅ Old connection closed');
+                } catch (e) {
+                    console.warn('⚠️ Error during deactivation:', e);
+                    chatClientRef.current = null;
+                    setChatConnected(false);
+                }
+            }
+
+            // Wait a bit before reconnecting
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            console.log('🔌 Reconnecting with new token...');
+            connectChat(newAccess);
+            console.log('✅ Reconnection initiated');
+        } catch (error) {
+            console.error('❌ Token refresh failed:', error);
+            addAlert({
+                type: "error",
+                message: "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.",
+            });
+        } finally {
+            isReconnectingRef.current = false;
+        }
+    }, [connectChat, addAlert]);
     // ===== WS NOTIFICATION =====
     const connectNotification = useCallback(() => {
         if (!user?.id) {

@@ -31,7 +31,6 @@ export const ListComment = ({ postId }) => {
         try {
           const res = await actionService.getCommentsByPost(postId);
           setComments(res.data);
-          console.log("Fetched comments:", res);
         } catch (error) {
           addAlert({
             type: "error",
@@ -47,9 +46,11 @@ export const ListComment = ({ postId }) => {
 
   useEffect(() => {
     if (replyingTo && replyInputRef.current) {
+      const cursorPosition = replyContent.length;
+      replyInputRef.current.setSelectionRange(cursorPosition, cursorPosition);
       replyInputRef.current.focus();
     }
-  }, [replyingTo]);
+  }, [replyingTo, replyContent]);
 
   const handleDeleteComment = async (commentId) => {
     try {
@@ -74,6 +75,15 @@ export const ListComment = ({ postId }) => {
   const handleReply = (commentId, userName) => {
     setReplyingTo({ id: commentId, userName });
     setReplyContent(`@${userName} `);
+
+    // Set cursor position after @name
+    setTimeout(() => {
+      if (replyInputRef.current) {
+        const cursorPosition = `@${userName} `.length;
+        replyInputRef.current.setSelectionRange(cursorPosition, cursorPosition);
+        replyInputRef.current.focus();
+      }
+    }, 0);
   };
 
   const handleCancelReply = () => {
@@ -188,16 +198,15 @@ export const ListComment = ({ postId }) => {
     if (loadingReplies[commentId]) return;
 
     try {
-      console.log(commentId)
       setLoadingReplies(prev => ({ ...prev, [commentId]: true }));
-      
+
       const { data } = await commentService.getRepliesByComment(commentId);
-      
+      console.log("Fetched replies for comment", data);
       setRepliesData(prev => ({ ...prev, [commentId]: data }));
       setExpandedComments(prev => ({ ...prev, [commentId]: true }));
 
     } catch (error) {
-console.error("Error loading replies:", error);
+      console.error("Error loading replies:", error);
       addAlert({
         type: "error",
         message: error?.response?.data?.message || "Không thể tải phản hồi!",
@@ -269,17 +278,6 @@ console.error("Error loading replies:", error);
                     exit={{ opacity: 0, scale: 0.95, y: -10 }}
                     className="absolute right-0 mt-2 w-40 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-10"
                   >
-                    {user?.id === comment?.commentator?.id && (
-                      <button
-                        onClick={() => {
-                          setOpenMenuId(null);
-                        }}
-                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-t-lg"
-                      >
-                        <Edit className="w-4 h-4" />
-                        Chỉnh sửa
-                      </button>
-                    )}
                     <button
                       onClick={() => handleDeleteComment(comment.id)}
                       className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors rounded-b-lg"
@@ -302,13 +300,12 @@ console.error("Error loading replies:", error);
 
         {comment.imgUrls && comment.imgUrls.length > 0 && (
           <div
-            className={`mt-2 grid gap-2 ${
-              comment.imgUrls.length === 1
-                ? "grid-cols-1"
-                : comment.imgUrls.length === 2
+            className={`mt-2 grid gap-2 ${comment.imgUrls.length === 1
+              ? "grid-cols-1"
+              : comment.imgUrls.length === 2
                 ? "grid-cols-2"
                 : "grid-cols-2 sm:grid-cols-3"
-            }`}
+              }`}
           >
             {comment.imgUrls.map((imgUrl, imgIndex) => (
               <motion.div
@@ -342,7 +339,7 @@ console.error("Error loading replies:", error);
             Trả lời
           </button>
 
-          {!isReply && comment.repliesCount > 0 && (
+          {comment.repliesCount > 0 && (
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -371,6 +368,7 @@ console.error("Error loading replies:", error);
         </div>
 
         {/* Reply Form */}
+        {/* Reply Form */}
         <AnimatePresence>
           {replyingTo?.id === comment.id && (
             <motion.div
@@ -386,9 +384,8 @@ console.error("Error loading replies:", error);
                   className="w-8 h-8 rounded-full border-2 border-gray-200 dark:border-gray-700 object-cover flex-shrink-0"
                 />
                 <div className="flex-1">
-                  <div className={`relative bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-purple-500 dark:border-purple-500 transition-colors ${
-                    isSubmittingReply ? "opacity-60 pointer-events-none" : ""
-                  }`}>
+                  <div className={`relative bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-purple-500 dark:border-purple-500 transition-colors ${isSubmittingReply ? "opacity-60 pointer-events-none" : ""
+                    }`}>
                     <textarea
                       ref={replyInputRef}
                       value={replyContent}
@@ -396,16 +393,9 @@ console.error("Error loading replies:", error);
                       onKeyDown={handleKeyDown}
                       rows={2}
                       disabled={isSubmittingReply}
+                      placeholder={`Trả lời @${replyingTo.userName}...`}
                       className="w-full px-3 py-2 text-xs sm:text-sm bg-transparent resize-none outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 disabled:cursor-not-allowed"
                     />
-
-                    {replyContent.startsWith(`@${replyingTo.userName}`) && (
-                      <div className="absolute top-2 left-3 pointer-events-none">
-                        <span className="text-xs sm:text-sm text-purple-600 dark:text-purple-400 font-semibold">
-                          @{replyingTo.userName}
-                        </span>
-                      </div>
-                    )}
 
                     <AnimatePresence>
                       {replyImagePreview && (
@@ -448,9 +438,8 @@ console.error("Error loading replies:", error);
                         <button
                           onClick={() => fileInputRef.current?.click()}
                           disabled={isSubmittingReply}
-                          className={`p-1 text-gray-500 hover:text-purple-600 dark:hover:text-purple-400 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                            isSubmittingReply ? "opacity-50 cursor-not-allowed" : ""
-                          }`}
+                          className={`p-1 text-gray-500 hover:text-purple-600 dark:hover:text-purple-400 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 ${isSubmittingReply ? "opacity-50 cursor-not-allowed" : ""
+                            }`}
                           aria-label="Thêm ảnh"
                         >
                           <ImageIcon className="w-4 h-4" />
@@ -458,9 +447,8 @@ console.error("Error loading replies:", error);
                         <button
                           onClick={handleCancelReply}
                           disabled={isSubmittingReply}
-                          className={`p-1 text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                            isSubmittingReply ? "opacity-50 cursor-not-allowed" : ""
-                          }`}
+                          className={`p-1 text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 ${isSubmittingReply ? "opacity-50 cursor-not-allowed" : ""
+                            }`}
                           aria-label="Hủy"
                         >
                           <X className="w-4 h-4" />
@@ -470,11 +458,10 @@ console.error("Error loading replies:", error);
                       <button
                         onClick={handleSubmitReply}
                         disabled={(!replyContent.trim() && !replyImage) || isSubmittingReply}
-                        className={`p-1.5 rounded-lg transition-all flex items-center gap-1 ${
-                          (replyContent.trim() || replyImage) && !isSubmittingReply
-                            ? "bg-purple-600 hover:bg-purple-700 text-white hover:scale-105"
-                            : "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
-                        }`}
+                        className={`p-1.5 rounded-lg transition-all flex items-center gap-1 ${(replyContent.trim() || replyImage) && !isSubmittingReply
+                          ? "bg-purple-600 hover:bg-purple-700 text-white hover:scale-105"
+                          : "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                          }`}
                         aria-label="Gửi"
                       >
                         {isSubmittingReply ? (
@@ -493,7 +480,6 @@ console.error("Error loading replies:", error);
             </motion.div>
           )}
         </AnimatePresence>
-
         {/* Nested Replies */}
         <AnimatePresence>
           {expandedComments[comment.id] && repliesData[comment.id] && (

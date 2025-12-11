@@ -13,7 +13,7 @@ const MENU_ITEMS = [
   { icon: UserCog, text: "Quản lý tài khoản", link: "/dashboard/account" },
   { icon: Command, text: "Quản lý bài viết", link: "/dashboard/post" },
   { icon: RefreshCcw, text: "Quản lý yêu cầu", link: "/dashboard/request" },
-  { icon: ShieldUser, text: "Cấp quyền", link: "/dashboard/add-role" },
+  // { icon: ShieldUser, text: "Cấp quyền", link: "/dashboard/add-role" },
   { icon: Info, text: "Thông tin", link: "/dashboard/info" },
 ];
 

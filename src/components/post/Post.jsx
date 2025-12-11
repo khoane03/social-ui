@@ -8,11 +8,14 @@ import { Link } from "react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
 import { formatTime } from "../../service/ultilsService";
+import { ConfirmModal } from "../common/ConfirmModal";
+import postService from "../../service/postService";
 
 export const Post = ({ post, onUpdate, isInModal = false }) => {
   const [isShowPost, setIsShowPost] = useState(false);
   const [isEditPost, setIsEditPost] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const { user } = useAuth();
   const menuRef = useRef(null);
 
@@ -50,8 +53,26 @@ export const Post = ({ post, onUpdate, isInModal = false }) => {
     onUpdate?.();
   };
 
+  const handleDelete = async () => {
+    try {
+      await postService.deletePost(post?.id);
+      setShowMenu(false);
+      setIsConfirmOpen(false);
+    } catch (error) {
+      console.error("Error deleting post:", error);
+    }
+  };
+
   return (
     <>
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={handleDelete}
+        title="Xác nhận xóa bài viết"
+        message="Bạn có chắc chắn muốn xóa bài viết này không? Hành động này không thể hoàn tác."
+        confirmText="Xóa"
+      />
       {isEditPost && (
         <EditPost
           post={post}
@@ -136,10 +157,7 @@ export const Post = ({ post, onUpdate, isInModal = false }) => {
 
               <button
                 className="flex items-center gap-3 w-full px-4 py-2.5 text-left transition-all duration-150 dark:text-red-400 dark:hover:bg-red-500/10 dark:hover:text-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
-                onClick={() => {
-                  setShowMenu(false);
-                  console.log('Xóa');
-                }}
+                onClick={() => setIsConfirmOpen(true)}
               >
                 <Trash2 size={16} className="opacity-70" />
                 <span className="font-medium">Xóa</span>

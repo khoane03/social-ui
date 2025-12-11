@@ -3,11 +3,14 @@ import { useEffect, useState } from "react";
 import postService from "../../service/postService";
 import { formatTime } from "../../service/ultilsService";
 import { ShowPost } from "../../components/post/ShowPost";
+import { ConfirmModal } from "../../components/common/ConfirmModal";
 
 export const PostManagerPage = () => {
   const [allPosts, setAllPosts] = useState([]);
   const [isShowDetail, setIsShowDetail] = useState(false);
-  const [selectedPost, setSelectedPost] = useState(null); // NEW
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     document.title = "Quản lý bài viết - Dashboard Admin";
@@ -16,13 +19,36 @@ export const PostManagerPage = () => {
         const res = await postService.getByAdmin(1, 100);
         console.log(res);
         setAllPosts(res.data);
-      } catch (error) {}
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+      }
     })();
   }, []);
 
   const handlePostDetails = (post) => {
-    setSelectedPost(post);      // lưu post đang chọn
-    setIsShowDetail(true);      // mở popup/chi tiết
+    setSelectedPost(post);
+    setIsShowDetail(true);
+  };
+
+  const handleDeletePost = async () => {
+    if (!selectedPost) return;
+
+    setIsDeleting(true);
+    try {
+      await postService.deletePost(selectedPost.id);
+      setAllPosts((prevPosts) => prevPosts.filter((post) => post.id !== selectedPost.id));
+      setIsConfirmOpen(false);
+      setSelectedPost(null);
+    } catch (error) {
+      console.error("Error deleting post:", error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const openDeleteConfirm = (post) => {
+    setSelectedPost(post);
+    setIsConfirmOpen(true);
   };
 
   const renderPrivacy = (privacy) => {
@@ -82,6 +108,22 @@ export const PostManagerPage = () => {
 
   return (
     <>
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        onClose={() => {
+          if (!isDeleting) {
+            setIsConfirmOpen(false);
+            setSelectedPost(null);
+          }
+        }}
+        onConfirm={handleDeletePost}
+        title="Xác nhận xoá bài viết"
+        message={`Bạn có chắc chắn muốn xoá bài viết của ${selectedPost?.author?.fullName || 'người dùng này'} không? Hành động này không thể hoàn tác.`}
+        confirmText="Xoá"
+        confirmStyle="danger"
+        loading={isDeleting}
+      />
+
       <div className="w-full bg-white dark:bg-[#1f2937] rounded-xl shadow-md p-6">
         <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">
           Quản lý bài viết
@@ -141,7 +183,8 @@ export const PostManagerPage = () => {
                       <button
                         title="Xem chi tiết"
                         onClick={() => handlePostDetails(post)}
-                        className="p-2 rounded-full bg-blue-100 dark:bg-blue-900 hover:scale-105 transition"
+                        disabled={isDeleting}
+                        className="p-2 rounded-full bg-blue-100 dark:bg-blue-900 hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <FileEdit
                           size={16}
@@ -150,7 +193,9 @@ export const PostManagerPage = () => {
                       </button>
                       <button
                         title="Xoá"
-                        className="p-2 rounded-full bg-red-100 dark:bg-red-900 hover:scale-105 transition"
+                        onClick={() => openDeleteConfirm(post)}
+                        disabled={isDeleting}
+                        className="p-2 rounded-full bg-red-100 dark:bg-red-900 hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Trash2 size={16} className="text-red-500" />
                       </button>

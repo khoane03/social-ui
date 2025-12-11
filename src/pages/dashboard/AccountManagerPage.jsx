@@ -347,7 +347,7 @@ export const AccountManagerPage = () => {
                                   size={16}
                                   className={
                                     user.status === "ACTIVE"
-                                      ? "text-yellow-600 dark:text-yellow-400"
+                                      ? "text-red-600 dark:text-red-400"
                                       : "text-green-600 dark:text-green-400"
                                   }
                                 />

@@ -11,13 +11,13 @@ const backdropVariants = {
 };
 
 const modalVariants = {
-  hidden: { 
-    opacity: 0, 
+  hidden: {
+    opacity: 0,
     scale: 0.95,
     y: 20
   },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     scale: 1,
     y: 0,
     transition: {
@@ -25,8 +25,8 @@ const modalVariants = {
       ease: "easeOut"
     }
   },
-  exit: { 
-    opacity: 0, 
+  exit: {
+    opacity: 0,
     scale: 0.95,
     y: 20,
     transition: {
@@ -47,6 +47,7 @@ export const EditPost = ({ post, onClose, onSuccess }) => {
   const [privacy, setPrivacy] = useState(post?.privacy || "PUBLIC");
   const [images, setImages] = useState(post?.urls || []);
   const [newImages, setNewImages] = useState([]);
+  const [deletedImages, setDeletedImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const { addAlert } = useAlerts();
 
@@ -77,9 +78,13 @@ export const EditPost = ({ post, onClose, onSuccess }) => {
         return updated;
       });
     } else {
+      // Add to deletedImages array
+      const deletedUrl = images[index];
+      setDeletedImages(prev => [...prev, deletedUrl]);
+      // Remove from images array
       setImages(prev => prev.filter((_, i) => i !== index));
     }
-  }, []);
+  }, [images]);
 
   const handleSubmit = useCallback(async () => {
     if (!content.trim()) {
@@ -92,28 +97,38 @@ export const EditPost = ({ post, onClose, onSuccess }) => {
 
     try {
       setLoading(true);
-      
+
       const formData = new FormData();
+      formData.append("id", post.id);
       formData.append("content", content);
       formData.append("privacy", privacy);
-      
-      // Add existing images URLs
+
+      // Add remaining existing images URLs
       images.forEach(url => {
-        formData.append("existingImages", url);
-      });
-      
-      // Add new images files
-      newImages.forEach(img => {
-        formData.append("images", img.file);
+        formData.append("urls", url);
       });
 
-      await postService.updatePost(post.id, formData);
-      
+      // Add remaining existing images URLs
+      images.forEach(url => {
+        formData.append("urls", url);
+      });
+
+      // Add deleted images URLs - append each URL separately
+      deletedImages.forEach(url => {
+        formData.append("deleteFiles", url);
+      });
+      // Add new images files
+      newImages.forEach(img => {
+        formData.append("newFiles", img.file);
+      });
+
+      await postService.updatePost(formData);
+
       addAlert({
         type: "success",
         message: "Cập nhật bài viết thành công!"
       });
-      
+
       onSuccess?.();
       onClose();
     } catch (error) {
@@ -124,7 +139,7 @@ export const EditPost = ({ post, onClose, onSuccess }) => {
     } finally {
       setLoading(false);
     }
-  }, [content, privacy, images, newImages, post.id, addAlert, onClose, onSuccess]);
+  }, [content, privacy, images, newImages, deletedImages, post.id, addAlert, onClose, onSuccess]);
 
   const handleBackdropClick = useCallback((e) => {
     if (e.target === e.currentTarget && !loading) {
@@ -179,11 +194,10 @@ export const EditPost = ({ post, onClose, onSuccess }) => {
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setPrivacy(option.value)}
                     disabled={loading}
-                    className={`flex-1 px-4 py-2 rounded-xl border-2 transition-all ${
-                      privacy === option.value
-                        ? "border-[#7F9FEF] bg-[#7F9FEF]/10 text-[#7F9FEF] dark:bg-[#7F9FEF]/20"
-                        : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 dark:text-white"
-                    } disabled:opacity-50`}
+                    className={`flex-1 px-4 py-2 rounded-xl border-2 transition-all ${privacy === option.value
+                      ? "border-[#7F9FEF] bg-[#7F9FEF]/10 text-[#7F9FEF] dark:bg-[#7F9FEF]/20"
+                      : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 dark:text-white"
+                      } disabled:opacity-50`}
                   >
                     <span className="mr-2">{option.icon}</span>
                     {option.label}

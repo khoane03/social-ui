@@ -306,7 +306,7 @@ export const RequestManagerPage = () => {
                                                                 {request.userProfile?.fullName || "N/A"}
                                                             </p>
                                                             <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                                {request.userProfile?.email || "N/A"}
+                                                                {request.userProfile?.id.substring(0, 4)}...
                                                             </p>
                                                         </div>
                                                     </div>

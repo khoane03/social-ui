@@ -4,6 +4,7 @@ import postService from "../../service/postService";
 import { formatTime } from "../../service/ultilsService";
 import { ShowPost } from "../../components/post/ShowPost";
 import { ConfirmModal } from "../../components/common/ConfirmModal";
+import Pagination from "../../components/common/Pagination";
 
 export const PostManagerPage = () => {
   const [allPosts, setAllPosts] = useState([]);
@@ -11,19 +12,22 @@ export const PostManagerPage = () => {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
 
   useEffect(() => {
     document.title = "Quản lý bài viết - Dashboard Admin";
     (async () => {
       try {
-        const res = await postService.getByAdmin(1, 100);
-        console.log(res);
+        const res = await postService.getByAdmin(currentPage, 100);
+        setTotalPages(res.totalPages);
         setAllPosts(res.data);
       } catch (error) {
         console.error("Error fetching posts:", error);
       }
     })();
-  }, []);
+  }, [currentPage]);
 
   const handlePostDetails = (post) => {
     setSelectedPost(post);
@@ -205,6 +209,11 @@ export const PostManagerPage = () => {
               )}
             </tbody>
           </table>
+          {/* <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={(page) => setCurrentPage(page)}
+          /> */}
         </div>
       </div>
 

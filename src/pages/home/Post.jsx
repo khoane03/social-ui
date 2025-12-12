@@ -134,7 +134,7 @@ export const PostPage = () => {
             initial="hidden"
             animate="visible"
           >
-            <Post post={post} />
+            <Post post={post} isInModal={true}/>
             <ListComment postId={id} />
           </motion.div>
         </motion.div>

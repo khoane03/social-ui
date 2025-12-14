@@ -23,10 +23,10 @@ export const TwoFASection = ({ initial2FA, accountId }) => {
             setIs2FAEnabled(newStatus);
 
             await getCurrentUser();
-            addAlert({
-                type: "success",
-                message: `${newStatus ? "Tắt" : "Bật"} 2FA thành công.`,
-            });
+            // addAlert({
+            //     type: "success",
+            //     message: `${newStatus ? "Tắt" : "Bật"} 2FA thành công.`,
+            // });
         } catch (error) {
             addAlert({
                 type: "error",

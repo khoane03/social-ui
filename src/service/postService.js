@@ -45,5 +45,13 @@ const postService = {
         const response = await axiosInstance.delete(`/post/${postId}`);
         return response;
     },
+    getPending: async () => {
+        const response = await axiosInstance.get('/post/pending');
+        return response;
+    },
+    processPost: async (data) => {
+        const response = await axiosInstance.put(`/post/process`, data);
+        return response;
+    }
 };
 export default postService;

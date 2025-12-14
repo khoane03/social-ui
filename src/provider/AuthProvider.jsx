@@ -24,7 +24,7 @@ const AuthProvider = ({ children }) => {
         accountService.getAccountLogin(),
         userService.getUserLogin(),
       ]);
-
+console.log("Fetched current user and account:", { accountRes });
       setAccount(accountRes?.data || null);
       setUser(userRes?.data || null);
     } catch (err) {

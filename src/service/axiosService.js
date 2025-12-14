@@ -14,7 +14,7 @@ axiosInstance.interceptors.request.use(
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       } else {
-        window.location.href = "/auth";
+        // window.location.href = "/auth";
         return Promise.reject(new Error("No access token"));
       }
     }
@@ -35,7 +35,7 @@ axiosInstance.interceptors.response.use(
       try {
         const refreshToken = getRefreshToken();
         if (!refreshToken) {
-          window.location.href = "/auth";
+          // window.location.href = "/auth";
           return Promise.reject(new Error("No refresh token"));
         }
 
@@ -57,7 +57,7 @@ axiosInstance.interceptors.response.use(
         removeAccessToken();
         removeRefreshToken();
         console.error("Refresh token failed:", err);
-        window.location.href = "/auth";
+        // window.location.href = "/auth";
       }
     }
 

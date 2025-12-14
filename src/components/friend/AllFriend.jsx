@@ -70,14 +70,14 @@ const AllFriend = () => {
             const friendId = friend.friendId || friend.id;
 
             if (action === "unfriend") {
-                await friendService.unFriend(friendId);
+                await friendService.unFriend(friend.id);
                 setFriends(prev => prev.filter(f => (f.friendId || f.id) !== friendId));
                 addAlert({
                     type: "success",
                     message: `Đã hủy kết bạn với ${friend.fullName}`
                 });
             } else if (action === "block") {
-                await friendService.blockFriend(friendId);
+                await friendService.blockFriend(friend.friendId);
                 setFriends(prev => prev.filter(f => (f.friendId || f.id) !== friendId));
                 addAlert({
                     type: "success",
@@ -106,7 +106,6 @@ const AllFriend = () => {
         setLoading(true);
 
         try {
-            console.log(`Fetching friends for user ${targetUserId}`);
             const res = await friendService.getFriendsList(page, 10, targetUserId);
 
             if (res.data && res.data.length > 0) {

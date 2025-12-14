@@ -24,12 +24,15 @@ import { RequestManagerPage } from "../pages/dashboard/RequestManagerPage";
 import { PostPage } from "../pages/home/Post";
 import ForgotPassword from "../pages/auth/ForgotPassword";
 import AllFriend from "../components/friend/AllFriend";
+import PostPending from "../pages/dashboard/PostPending";
+import LoginAdminPage from "../pages/dashboard/LoginAdminPage";
+
 
 const AppRoute = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route element={<PrivateRoute />}>
+        <Route element={<PrivateRoute role="ROLE_USER"/>}>
           <Route path="/" element={<MainLayout />}>
             <Route index element={<HomePage />} />
             <Route path="friend" element={<FriendPage />} >
@@ -56,12 +59,13 @@ const AppRoute = () => {
           <Route path="register" element={<SignUpPage />} />
           <Route path="forgot-password" element={<ForgotPassword />} />
         </Route>
-
-        <Route element={<PrivateRoute onlyAdmin redirectTo="/no-permission" />}>
+        <Route path="/dashboard/auth" element={<LoginAdminPage />} />
+        <Route element={<PrivateRoute role="ROLE_ADMIN" redirectTo="/dashboard/auth" />}>
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<OverviewPage />} />
             <Route path="account" element={<AccountManagerPage />} />
             <Route path="post" element={<PostManagerPage />} />
+            <Route path="post-pending" element={<PostPending />} />
             <Route path="info" element={<AdminProfilePage />} />
             <Route path="request" element={<RequestManagerPage />} />
             <Route path="add-role" element={<RoleManagerPage />} />

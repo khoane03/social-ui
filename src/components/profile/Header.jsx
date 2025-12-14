@@ -445,6 +445,10 @@ export const Header = () => {
                 {userInfo?.fullName}
               </h1>
               {userInfo?.isVerified && <BadgeCheck className="ml-1 text-green-500 w-4 h-4" />}
+              {!!userInfo?.bio && <span className="ml-2 text-gray-500">
+                ({userInfo?.bio})
+              </span>
+              }
             </div>
 
             <div className="flex flex-col text-xs md:text-sm text-zinc-300">

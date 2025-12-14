@@ -144,7 +144,7 @@ export const Suggestion = () => {
                     >
                       {s.fullName}
                     </Link>
-                    {s.isVerified && (
+                    {s.verified && (
                       <BadgeCheck className="ml-1 text-green-500 w-3 h-3 md:w-4 md:h-4" />
                     )}
                   </div>

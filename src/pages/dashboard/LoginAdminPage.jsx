@@ -62,9 +62,7 @@ const LoginAdminPage = () => {
     }
     if (!password) {
       newErrors.password = "Vui lòng nhập mật khẩu";
-    } else if (password.length < 6) {
-      newErrors.password = "Mật khẩu phải có ít nhất 6 ký tự";
-    }
+    } 
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);

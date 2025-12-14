@@ -20,7 +20,7 @@ export const RegisterAccount = ({ onSubmit, loading }) => {
         setForm((prev) => ({ ...prev, [field]: value }));
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = useCallback(() => {
         const { email, password, confirmPassword } = form;
 
         if (!email || !password || !confirmPassword) {
@@ -58,13 +58,16 @@ export const RegisterAccount = ({ onSubmit, loading }) => {
         }
 
         onSubmit(form);
-    };
+    }, [form, addAlert, onSubmit]);
 
-    const handleKeyPress = useCallback((e) => {
-        if (e.key === "Enter" && !loading) {
-            handleSubmit();
-        }
-    }, [loading]);
+    const handleKeyPress = useCallback(
+        (e) => {
+            if (e.key === "Enter" && !loading) {
+                handleSubmit();
+            }
+        },
+        [loading, handleSubmit]
+    );
 
     return (
         <motion.div

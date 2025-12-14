@@ -12,7 +12,7 @@ const MENU_ITEMS = [
   { icon: ChartNoAxesColumn, text: "Tổng Quan", link: "/dashboard" },
   { icon: UserCog, text: "Quản lý tài khoản", link: "/dashboard/account" },
   { icon: Command, text: "Quản lý bài viết", link: "/dashboard/post" },
-  { icon: Command, text: "Quản lý bài viết đang chờ", link: "/dashboard/post-pending" },
+  // { icon: Command, text: "Quản lý bài viết đang chờ", link: "/dashboard/post-pending" },
   { icon: RefreshCcw, text: "Quản lý yêu cầu", link: "/dashboard/request" },
   // { icon: ShieldUser, text: "Cấp quyền", link: "/dashboard/add-role" },
   { icon: Info, text: "Thông tin", link: "/dashboard/info" },

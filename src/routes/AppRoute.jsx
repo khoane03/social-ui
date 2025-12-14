@@ -32,7 +32,7 @@ const AppRoute = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route element={<PrivateRoute role="ROLE_USER"/>}>
+        <Route element={<PrivateRoute role="ROLE_USER" />}>
           <Route path="/" element={<MainLayout />}>
             <Route index element={<HomePage />} />
             <Route path="friend" element={<FriendPage />} >

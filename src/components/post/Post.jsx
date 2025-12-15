@@ -10,6 +10,7 @@ import { useAuth } from "../../context/AuthContext";
 import { formatTime } from "../../service/ultilsService";
 import { ConfirmModal } from "../common/ConfirmModal";
 import postService from "../../service/postService";
+import { useAlerts } from "../../context/AlertContext";
 
 export const Post = ({ post, onUpdate, isInModal = false }) => {
   const [isShowPost, setIsShowPost] = useState(false);
@@ -18,6 +19,7 @@ export const Post = ({ post, onUpdate, isInModal = false }) => {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const { user } = useAuth();
   const menuRef = useRef(null);
+  const {addAlert} = useAlerts();
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -58,6 +60,17 @@ export const Post = ({ post, onUpdate, isInModal = false }) => {
       await postService.deletePost(post?.id);
       setShowMenu(false);
       setIsConfirmOpen(false);
+      addAlert({
+        type: "success",
+        message: "Xóa bài viết thành công!",
+      });
+      window.dispatchEvent(new CustomEvent('postDelete', { 
+        detail: {
+          event: 'postDelete',
+          timestamp: Date.now()
+        }
+      }));
+      onUpdate?.();
     } catch (error) {
       console.error("Error deleting post:", error);
     }

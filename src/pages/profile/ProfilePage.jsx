@@ -11,16 +11,16 @@ export const ProfilePage = () => {
   const { user } = useAuth();
   const { addAlert } = useAlerts();
   const { id: userId } = useParams();
-  
+
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  
+
   const observerRef = useRef();
   const lastPostRef = useRef();
-  
+
   const isOwnProfile = user?.id === userId;
 
   useEffect(() => {
@@ -36,22 +36,22 @@ export const ProfilePage = () => {
       } else {
         setIsLoading(true);
       }
-      
+
       const pageSize = 10;
       const response = await postService.getPostusers(userId, pageNum, pageSize);
       const newPosts = response.data || [];
-      
+
       // Check if there are more posts
       if (newPosts.length < pageSize) {
         setHasMore(false);
       }
-      
+
       if (isLoadMore) {
         setPosts(prev => [...prev, ...newPosts]);
       } else {
         setPosts(newPosts);
       }
-      
+
     } catch (error) {
       console.error("Error loading posts:", error);
       addAlert({
@@ -73,12 +73,28 @@ export const ProfilePage = () => {
   // Initial load khi userId thay đổi
   useEffect(() => {
     if (!userId) return;
-    
+
     setPage(1);
     setHasMore(true);
     setPosts([]);
     fetchPosts(1, false);
   }, [userId]);
+
+  useEffect(() => {
+    const handlePostCreated = async () => {
+      await fetchPosts(1, false);
+    };
+
+    window.addEventListener('postCreated', handlePostCreated);
+    window.addEventListener('postDelete', handlePostCreated);
+    window.addEventListener('postUpdate', handlePostCreated);
+
+    return () => {
+      window.removeEventListener('postCreated', handlePostCreated);
+      window.removeEventListener('postDelete', handlePostCreated);
+      window.removeEventListener('postUpdate', handlePostCreated);
+    };
+  }, []);
 
   // Intersection Observer callback
   const handleObserver = useCallback((entries) => {
@@ -95,13 +111,13 @@ export const ProfilePage = () => {
       rootMargin: "200px", // Load trước 200px
       threshold: 0.1
     };
-    
+
     observerRef.current = new IntersectionObserver(handleObserver, option);
-    
+
     if (lastPostRef.current) {
       observerRef.current.observe(lastPostRef.current);
     }
-    
+
     return () => {
       if (observerRef.current) {
         observerRef.current.disconnect();
@@ -125,7 +141,7 @@ export const ProfilePage = () => {
     <div className="md:border min-h-screen border-b-wt dark:border-zinc-700 md:rounded-t-4xl">
       {/* New Post - Only show on own profile */}
       {isOwnProfile && <NewPost onPostCreated={handleNewPost} />}
-      
+
       {/* Loading State */}
       {isLoading ? (
         <motion.div
@@ -150,8 +166,8 @@ export const ProfilePage = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  transition={{ 
-                    duration: 0.3, 
+                  transition={{
+                    duration: 0.3,
                     ease: "easeOut",
                     delay: Math.min(index * 0.03, 0.3)
                   }}

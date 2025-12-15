@@ -70,12 +70,12 @@ export const ModalAddPost = ({ onClose }) => {
       setContent("");
       setImages([]);
       setFiles([]);
-      //  window.dispatchEvent(new CustomEvent('postCreated', { 
-      //   detail: {
-      //    event: 'postCreated',
-      //     timestamp: Date.now()
-      //   }
-      // }));
+      window.dispatchEvent(new CustomEvent('postCreated', { 
+        detail: {
+          event: 'postCreated',
+          timestamp: Date.now()
+        }
+      }));
       onClose?.();
     } catch (err) {
       console.error("Lỗi đăng bài:", err);

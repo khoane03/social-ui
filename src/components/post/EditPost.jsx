@@ -129,6 +129,12 @@ export const EditPost = ({ post, onClose, onSuccess }) => {
         message: "Cập nhật bài viết thành công!"
       });
 
+      window.dispatchEvent(new CustomEvent('postUpdate', { 
+        detail: {
+          event: 'postUpdate',
+          timestamp: Date.now()
+        }
+      }));
       onSuccess?.();
       onClose();
     } catch (error) {

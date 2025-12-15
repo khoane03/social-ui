@@ -105,6 +105,23 @@ export const HomePage = () => {
     }
   }, [user?.id, activeTab, hasMore, addAlert]);
 
+  // listen to post created event
+  useEffect(() => {
+    const handlePostCreated = async () => {
+      await fetchPosts(1, false);
+    };
+
+    window.addEventListener('postCreated', handlePostCreated);
+    window.addEventListener('postDelete', handlePostCreated);
+    window.addEventListener('postUpdate', handlePostCreated);
+
+    return () => {
+      window.removeEventListener('postCreated', handlePostCreated);
+      window.removeEventListener('postDelete', handlePostCreated);
+      window.removeEventListener('postUpdate', handlePostCreated);  
+    };
+  }, []);
+
   // Initial load khi tab thay đổi
   useEffect(() => {
     setPage(1);

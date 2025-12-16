@@ -112,12 +112,15 @@ export const ConversationInfoModal = ({ isOpen, onClose, conversation }) => {
 
         setIsProcessing(true);
         try {
-            const formData = new FormData();
-            formData.append("conversationId", conversation.id);
-            formData.append("userIds", selectedUsers.map(u => u.id).join(","));
+            // const formData = new FormData();
+            // formData.append("conversationId", conversation.id);
+            // formData.append("userIds", selectedUsers.map(u => u.id).join(","));
+            console.log("Adding members:", selectedUsers);
+            await conversationService.addMembersToGroup({
+                conversationId: conversation.id,
+                userIds: selectedUsers.map(u => u.id)
+            });
 
-            await conversationService.addMembersToGroup(formData);
-            
             addAlert({ type: "success", message: "Đã thêm thành viên vào nhóm." });
             setMembers(prev => [...prev, ...selectedUsers]);
             setShowAddMemberModal(false);
@@ -307,11 +310,10 @@ export const ConversationInfoModal = ({ isOpen, onClose, conversation }) => {
                                                     whileHover={{ scale: 1.02 }}
                                                     whileTap={{ scale: 0.98 }}
                                                     onClick={() => toggleSelectUser(person)}
-                                                    className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-colors ${
-                                                        isSelected 
-                                                            ? "bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-500" 
+                                                    className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-colors ${isSelected
+                                                            ? "bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-500"
                                                             : "hover:bg-gray-50 dark:hover:bg-zinc-800 border-2 border-transparent"
-                                                    }`}
+                                                        }`}
                                                 >
                                                     <div className="flex items-center gap-3">
                                                         <img
@@ -328,11 +330,10 @@ export const ConversationInfoModal = ({ isOpen, onClose, conversation }) => {
                                                             </p>
                                                         </div>
                                                     </div>
-                                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                                        isSelected 
-                                                            ? "bg-blue-500 border-blue-500" 
+                                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected
+                                                            ? "bg-blue-500 border-blue-500"
                                                             : "border-gray-300 dark:border-zinc-600"
-                                                    }`}>
+                                                        }`}>
                                                         {isSelected && <Check size={14} className="text-white" />}
                                                     </div>
                                                 </motion.li>
@@ -349,11 +350,10 @@ export const ConversationInfoModal = ({ isOpen, onClose, conversation }) => {
                                     whileTap={{ scale: 0.98 }}
                                     onClick={handleAddMembers}
                                     disabled={selectedUsers.length === 0 || isProcessing}
-                                    className={`w-full py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
-                                        selectedUsers.length === 0 || isProcessing
+                                    className={`w-full py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${selectedUsers.length === 0 || isProcessing
                                             ? "bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed"
                                             : "bg-blue-500 hover:bg-blue-600 text-white"
-                                    }`}
+                                        }`}
                                 >
                                     {isProcessing ? (
                                         <>

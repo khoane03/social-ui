@@ -19,7 +19,7 @@ const conversationService = {
         return response;
     },
     addMembersToGroup: async (data) => {
-        const response = await axiosInstance.put('/conversation/add-member', {data});
+        const response = await axiosInstance.put('/conversation/add-member', data);
         return response;
     },
     updateConversation: async (formData) => {

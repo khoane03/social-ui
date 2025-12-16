@@ -9,12 +9,46 @@ import {
   Lock,
   Users,
   ChevronDown,
+  AlertCircle,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useAlerts } from "../../context/AlertContext";
 import Loading from "../common/Loading";
 import postService from "../../service/postService";
 
+
+const bannedWords = ["dm", "đm", "what the fuck", "shit", "vcl", "cc", "lồn", "cặc", "đĩ", "ngu", "địt", "đéo", "chó", "spam"];
+
+// Hàm kiểm tra từ cấm
+const containsBannedWords = (text) => {
+  if (!text) return { hasBanned: false, bannedWords: [] };
+  
+  // Chuyển về chữ thường và bỏ dấu
+  let cleanText = text.toLowerCase();
+  cleanText = cleanText.replace(/[àáạảãâầấậẩẫăằắặẳẵ]/g, 'a');
+  cleanText = cleanText.replace(/[èéẹẻẽêềếệểễ]/g, 'e');
+  cleanText = cleanText.replace(/[ìíịỉĩ]/g, 'i');
+  cleanText = cleanText.replace(/[òóọỏõôồốộổỗơờớợởỡ]/g, 'o');
+  cleanText = cleanText.replace(/[ùúụủũưừứựửữ]/g, 'u');
+  cleanText = cleanText.replace(/[ỳýỵỷỹ]/g, 'y');
+  cleanText = cleanText.replace(/đ/g, 'd');
+  
+  const foundWords = [];
+  
+  for (const word of bannedWords) {
+    let cleanWord = word.toLowerCase();
+    cleanWord = cleanWord.replace(/đ/g, 'd');
+    
+    if (cleanText.includes(cleanWord)) {
+      foundWords.push(word);
+    }
+  }
+  
+  return {
+    hasBanned: foundWords.length > 0,
+    bannedWords: foundWords
+  };
+};
 
 export const ModalAddPost = ({ onClose }) => {
   const { user } = useAuth();
@@ -25,6 +59,7 @@ export const ModalAddPost = ({ onClose }) => {
   const [privacy, setPrivacy] = useState("PUBLIC");
   const [showPrivacyMenu, setShowPrivacyMenu] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
+  const [bannedWordWarning, setBannedWordWarning] = useState(null);
 
   const privacyOptions = useMemo(() => [
     { id: "PUBLIC", label: "Công khai", icon: Globe, description: "Mọi người có thể xem" },
@@ -51,8 +86,41 @@ export const ModalAddPost = ({ onClose }) => {
       return prev.filter((_, i) => i !== index);
     });
   }, []);
+
+  // Xử lý thay đổi nội dung với kiểm tra từ cấm
+  const handleContentChange = useCallback((e) => {
+    const value = e.target.value;
+    setContent(value);
+    
+    if (value.trim()) {
+      const check = containsBannedWords(value);
+      console.log('Check banned words:', check);
+      
+      if (check.hasBanned) {
+        setBannedWordWarning({
+          message: `Phát hiện ${check.bannedWords.length} từ ngữ không phù hợp`,
+          words: check.bannedWords
+        });
+      } else {
+        setBannedWordWarning(null);
+      }
+    } else {
+      setBannedWordWarning(null);
+    }
+  }, []);
+
   const handlePost = useCallback(async () => {
     if (!content.trim()) return;
+
+    // KIỂM TRA TỪ CẤM TRƯỚC KHI ĐĂNG
+    const check = containsBannedWords(content);
+    if (check.hasBanned) {
+      addAlert({
+        type: "error",
+        message: `Không thể đăng bài! Nội dung chứa từ ngữ không phù hợp: ${check.bannedWords.join(', ')}`
+      });
+      return;
+    }
 
     setIsPosting(true);
 
@@ -70,6 +138,7 @@ export const ModalAddPost = ({ onClose }) => {
       setContent("");
       setImages([]);
       setFiles([]);
+      setBannedWordWarning(null);
       window.dispatchEvent(new CustomEvent('postCreated', { 
         detail: {
           event: 'postCreated',
@@ -112,6 +181,8 @@ export const ModalAddPost = ({ onClose }) => {
       transition: { duration: 0.2 }
     }
   };
+
+  const canPost = content.trim() && !bannedWordWarning;
 
   if (isPosting) {
     return (
@@ -255,11 +326,60 @@ export const ModalAddPost = ({ onClose }) => {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1 }}
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={handleContentChange}
             placeholder="Bạn đang nghĩ gì?"
             rows={6}
-            className="w-full bg-transparent resize-none text-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none text-gray-900 dark:text-white"
+            className={`w-full bg-transparent resize-none text-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none transition-colors ${
+              bannedWordWarning 
+                ? 'text-red-600 dark:text-red-400' 
+                : 'text-gray-900 dark:text-white'
+            }`}
           />
+
+          {/* WARNING MESSAGE - HIỂN THỊ NGAY BÊN DƯỚI TEXTAREA */}
+          <AnimatePresence>
+            {bannedWordWarning && (
+              <motion.div
+                initial={{ opacity: 0, height: 0, y: -10 }}
+                animate={{ opacity: 1, height: "auto", y: 0 }}
+                exit={{ opacity: 0, height: 0, y: -10 }}
+                className="p-4 bg-red-50 dark:bg-red-900/20 border-2 border-red-300 dark:border-red-700 rounded-xl"
+              >
+                <div className="flex items-start gap-3">
+                  <AlertCircle size={24} className="text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-base font-bold text-red-800 dark:text-red-200 mb-2">
+                      🚫 {bannedWordWarning.message}
+                    </p>
+                    
+                    {/* DANH SÁCH TỪ CẤM */}
+                    <div className="mb-2">
+                      <p className="text-sm text-red-700 dark:text-red-300 mb-2 font-semibold">
+                        Từ vi phạm được phát hiện:
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {bannedWordWarning.words.map((word, index) => (
+                          <motion.span
+                            key={index}
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ delay: index * 0.05 }}
+                            className="inline-flex items-center px-3 py-1.5 bg-red-200 dark:bg-red-800 text-red-900 dark:text-red-100 rounded-full font-bold text-sm"
+                          >
+                            ❌ {word}
+                          </motion.span>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <p className="text-sm text-red-800 dark:text-red-200 font-semibold">
+                      ⚠️ Vui lòng xóa hoặc thay thế những từ này để đăng bài
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Image Preview */}
           <AnimatePresence>
@@ -324,16 +444,22 @@ export const ModalAddPost = ({ onClose }) => {
         {/* Footer - Submit Button */}
         <div className="border-t border-gray-200 dark:border-gray-700 p-4">
           <motion.button
-            whileHover={content.trim() ? { scale: 1.02 } : {}}
-            whileTap={content.trim() ? { scale: 0.98 } : {}}
-            disabled={!content.trim()}
+            whileHover={canPost ? { scale: 1.02 } : {}}
+            whileTap={canPost ? { scale: 0.98 } : {}}
+            disabled={!canPost}
             onClick={handlePost}
-            className={`w-full py-3 rounded-xl font-semibold text-sm transition-all ${content.trim()
-              ? "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl"
-              : "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
-              }`}
+            className={`w-full py-3 rounded-xl font-semibold text-sm transition-all ${
+              canPost
+                ? "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl"
+                : "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+            }`}
           >
-            {content.trim() ? "Đăng bài viết" : "Vui lòng nhập nội dung"}
+            {bannedWordWarning 
+              ? "🚫 Không thể đăng bài" 
+              : content.trim() 
+                ? "Đăng bài viết" 
+                : "Vui lòng nhập nội dung"
+            }
           </motion.button>
         </div>
       </motion.div>
